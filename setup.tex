@@ -1,0 +1,63 @@
+\usepackage{ifthen}
+\usepackage{xparse}
+\usepackage{enumitem}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{stmaryrd}
+\usepackage{amsthm}
+\usepackage{mathtools}
+\usepackage{proof}
+\usepackage{colonequals}
+\usepackage{comment}
+\usepackage{textcomp}
+\usepackage[us]{optional}
+\usepackage{color}
+\usepackage{url}
+\usepackage{verbatim}
+\usepackage{graphics}
+\usepackage{mathpartir}
+\usepackage{tikz}
+\usepackage{todonotes}
+
+% these two are used to create the wavy division sign
+\usepackage{stackengine}
+\usepackage{scalerel}
+
+\usepackage{hyperref}
+\usepackage[nameinlink, capitalise]{cleveref}
+
+\usepackage{array}
+
+\input{infrastructure}
+
+\usepackage[abt]{pfpl-syntax}
+\usepackage{pfpl-judgments}
+
+%% \xMapsto command
+% \usepackage{mathtools}
+\usepackage{stmaryrd}
+
+\makeatletter
+\newcommand{\xMapsto}[2][]{\ext@arrow 0599{\Mapstofill@}{#1}{#2}}
+\def\Mapstofill@{\arrowfill@{\Mapstochar\Relbar}\Relbar\Rightarrow}
+\makeatother
+
+%% Instructor-only remarks. These remarks requires the benefit of the hind sight to understand
+%% (or foreshadowing) future content so it doesn't make sense to put it in the file
+%% Define \isstudentcopy to generate the student version
+\definecolor{iremarkcolor}{rgb}{0.0, 0.0, 0.5}
+\NewDocumentEnvironment{iremark}{ +b }
+{ \ifthenelse{\isundefined{\isstudentcopy}}{
+    \begingroup
+    \color{iremarkcolor}
+    \begin{remark}
+    #1
+    \end{remark}
+    \endgroup
+  }{
+  }
+}{ }
+
+\newcommand{\inlremark}[1]{\ifthenelse{\isundefined{\isstudentcopy}}{\begingroup\color{iremarkcolor}(#1)\endgroup}{}}
+\newcommand{\PFPL}{\textbf{\textsf{PFPL}}}

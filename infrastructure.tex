@@ -1,0 +1,36 @@
+
+%% Beamer defines a range of its own theorems
+\ifx\beamer\undefined
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+
+\theoremstyle{definition}
+\newtheorem*{remark}{Remark}
+\newtheorem*{notation}{Notation}
+\newtheorem{definition}{Definition}
+\newtheorem{conjecture}{Conjecture}
+\newtheorem{example}{Example}
+
+\else 
+  %% Intentionally left blank
+\fi
+
+\makeatletter
+\newcommand\xlabel[2][]{\phantomsection\def\@currentlabelname{#1}\label{#2}}
+\makeatother
+
+\newenvironment{rules}[1][{}]{\begin{mathpar}}{\end{mathpar}}
+
+%% This puts the name on the top
+\NewDocumentCommand{\defrule}{o o m m}{
+  \inferrule*[lab=\IfNoValueTF{#1}{}{\textsc{[#1]}}]
+  { #3 }
+  { #4 }
+  \IfNoValueTF{#2}{}{\xlabel[#1]{\ifdefined\InApx{apx:}\else\fi#2}}
+}
+
+
+\NewDocumentCommand{\ruleref}{m}{{[\textsc{\nameref{#1}}]}}
