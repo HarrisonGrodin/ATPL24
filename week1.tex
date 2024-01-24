@@ -164,7 +164,7 @@ is $\Gamma' \entails \isOfTp{\hat{\gamma}(M)}{\hat{\gamma}(A)}$.}.
 The term $\hat{\gamma}(M)$ is commonly abbreviated as $\hat{M}$ when the substitution $\gamma$ applied
 is clear from context.
 
-\begin{corollary}[Transitivity/Cut/Substituion]
+\begin{corollary}[Transitivity/Cut/Substitution]
 If $\Gamma \entails \isOfTp{M}{A}$ and $\Gamma, x : A \entails \isOfTp{N}{B}$ then $\Gamma \entails \isOfTp{\Sub{M}{x}{N}}{B}$.
 \end{corollary}
 
@@ -225,7 +225,7 @@ values resulting from execution. This motivates us to \emph{define} a family of 
 the motive for the induction is the type $\Opn{Tm} \to \Opn{prop}$.} $\HT[A](M)$ over
 \emph{closed} terms $M$, indexed by types $A$.
 
-\begin{definition}[Hereidtary Termination]
+\begin{definition}[Hereditary Termination]
   $$
 \begin{array}{cll}
 	\HT[\ansTy*](M) & \Iff &
@@ -457,7 +457,7 @@ Again, our goal is to prove termination for the calculus with natural numbers. F
 \end{enumerate}
 \end{definition}
 
-Let us pondering on this definition and think about what it entails.
+Let us ponder this definition and think about what it entails.
 
 \begin{enumerate}
   \item [(a)] Firstly, being the strongest predicate itself, it means $\HT[\natTy*](-)$
