@@ -1,0 +1,15 @@
+\makeatletter
+
+\NewDocumentCommand{\fstEx}{s O{\tau_1} O{\tau_2} m}{\IfBooleanTF{#1}{\projEx*<1>[#2][#3]{#4}}{\projEx<1>[#2][#3]{#4}}}
+\NewDocumentCommand{\sndEx}{s O{\tau_1} O{\tau_2} m}{\IfBooleanTF{#1}{\projEx*<2>[#2][#3]{#4}}{\projEx<2>[#2][#3]{#4}}}
+
+\NewDocumentCommand{\hatM}{}{\hat{M}}
+
+\NewDocumentCommand{\Iff}{}{\,\mathrm{iff}\,}
+\NewDocumentCommand{\limp}{}{\supset}
+
+\NewDocumentCommand{\HT}{O{A}}{\mathsf{HT}_{#1}}
+
+
+\makeatother
+
