@@ -138,30 +138,30 @@ Note that in $\gamma : \Gamma' \to \Gamma$, the arrow should not be understood a
 
 Given a substitution $\gamma : \Gamma' \to \Gamma$, the function
 sending a term $M$ of context $\Gamma$ to the term with the substitutions applied is
-denoted $\hat{\gamma}$.
+denoted $\widehat{\gamma}$.
 
 \begin{align*}
-  \hat{\gamma}(x) &= \gamma(x) \\
-  \hat{\gamma}(\unitEx*) &= \unitEx* \\
-  \hat{\gamma}(\pairEx*{M_1}{M_2}) &= \pairEx*{\hat{\gamma}(M_1)}{\hat{\gamma}(M_2)} \\
-  \hat{\gamma}(\fstEx*{M}) &= \fstEx*{\hat{\gamma}(M)} \\
-  \hat{\gamma}(\sndEx*{M}) &= \sndEx*{\hat{\gamma}(M)} \\
-  \hat{\gamma}(\lamEx*{x}{M}) &= \lamEx*{x}{\hat{\gamma}
+  \widehat{\gamma}(x) &= \gamma(x) \\
+  \widehat{\gamma}(\unitEx*) &= \unitEx* \\
+  \widehat{\gamma}(\pairEx*{M_1}{M_2}) &= \pairEx*{\widehat{\gamma}(M_1)}{\widehat{\gamma}(M_2)} \\
+  \widehat{\gamma}(\fstEx*{M}) &= \fstEx*{\widehat{\gamma}(M)} \\
+  \widehat{\gamma}(\sndEx*{M}) &= \sndEx*{\widehat{\gamma}(M)} \\
+  \widehat{\gamma}(\lamEx*{x}{M}) &= \lamEx*{x}{\widehat{\gamma}
   '(M)} \tag*{where $\gamma' = \gamma\{x \mapsto x\}$} \\
-  \hat{\gamma}(\appEx*{M_1}{M_2}) &= \appEx*{\hat{\gamma}(M_1)}{\hat{\gamma}(M_2)} \\
-  \hat{\gamma}(\yesEx*) &= \yesEx* \\
-  \hat{\gamma}(\noEx*) &= \noEx*
+  \widehat{\gamma}(\appEx*{M_1}{M_2}) &= \appEx*{\widehat{\gamma}(M_1)}{\widehat{\gamma}(M_2)} \\
+  \widehat{\gamma}(\yesEx*) &= \yesEx* \\
+  \widehat{\gamma}(\noEx*) &= \noEx*
 \end{align*}
 
 The substitution lemma that governs it is of essence.
 
 \begin{lemma}\label{lem:subst}
 If $\Gamma \entails \isOfTp{M}{A}$ and $\gamma : \Gamma' \to \Gamma$ then
-$\Gamma' \entails \isOfTp{\hat{\gamma}(M)}{A}$ \footnote{In a dependently-typed context, the substitution also applies to $A$, then the conclusion
-is $\Gamma' \entails \isOfTp{\hat{\gamma}(M)}{\hat{\gamma}(A)}$.}.
+$\Gamma' \entails \isOfTp{\widehat{\gamma}(M)}{A}$ \footnote{In a dependently-typed context, the substitution also applies to $A$, then the conclusion
+is $\Gamma' \entails \isOfTp{\widehat{\gamma}(M)}{\widehat{\gamma}(A)}$.}.
 \end{lemma}
 
-The term $\hat{\gamma}(M)$ is commonly abbreviated as $\hat{M}$ when the substitution $\gamma$ applied
+The term $\widehat{\gamma}(M)$ is commonly abbreviated as $\widehat{M}$ when the substitution $\gamma$ applied
 is clear from context.
 
 \begin{corollary}[Transitivity/Cut/Substitution]
@@ -169,7 +169,7 @@ If $\Gamma \entails \isOfTp{M}{A}$ and $\Gamma, x : A \entails \isOfTp{N}{B}$ th
 \end{corollary}
 
 \begin{proof}
-  Follows immediately from \Cref{lem:subst} by taking $\gamma : \Gamma \to (\Gamma, \isOfTp{x}{A})$ be $\gamma = \gamma_{id}\{x \mapsto M\}$, where $\gamma_{id}$ is the identity substitution that maps every variable to itself. It is clear that $\hat{\gamma}(N) = \Sub{M}{x}{N}$.
+  Follows immediately from \Cref{lem:subst} by taking $\gamma : \Gamma \to (\Gamma, \isOfTp{x}{A})$ be $\gamma = \gamma_{id}\{x \mapsto M\}$, where $\gamma_{id}$ is the identity substitution that maps every variable to itself. It is clear that $\widehat{\gamma}(N) = \Sub{M}{x}{N}$.
 \end{proof}
 
 Other instances of structural properties, such as weakening and contraction, can be proved using \Cref{lem:subst} in a similar fashion.
@@ -303,7 +303,7 @@ We would then strengthen our theorem to:
 
 \begin{quotation}
 (Proposed) If $\Gamma \entails{\isOfTp{M}{A}}$ then for all (closed) substitutions $\gamma$ such that
-$\HT[\Gamma](\gamma)$, $\HT[A](\hat{\gamma}(M))$ \footnote{Equivalently with our notational convention, $\HT[A](\hat{M})$.}.
+$\HT[\Gamma](\gamma)$, $\HT[A](\widehat{\gamma}(M))$ \footnote{Equivalently with our notational convention, $\HT[A](\widehat{M})$.}.
 \end{quotation}
 
 Conventionally, the above statement is abbreviated with the following notation to match syntax of the
@@ -315,35 +315,35 @@ If $\Gamma \entails{\isOfTp{M}{A}}$ then $\Gamma \gg M \in A$.
 \begin{proof}
 Go by induction on the typing derivation.
 \begin{enumerate}
-  \item [Rule \ruleref{sta:var}] By assumption we have $\HT[\Gamma, \isOfTp{x}{A}](\gamma)$. We want to show $\HT[A](\hat{\gamma}(x))$. By definition of $\hat{\gamma}$, we have $\hat{\gamma}(x) = \gamma(x)$, and $\HT[A](\gamma(x))$ follows immediately from $\HT[\Gamma, \isOfTp{x}{A}](\gamma)$.
-  \item [Rule \ruleref{sta:triv}] We want to show $\HT[\unitTy*](\hat{\gamma}(\unitEx*))$. By definition of $\hat{\gamma}$, we have $\hat{\gamma}(\unitEx*) = \unitEx*$, and $\HT[\unitTy*](\unitEx*)$ holds immediately by definition.
-  \item [Rule \ruleref{sta:ans1}/\ruleref{sta:ans2}] We want to show $\HT[\ansTy*](\hat{\gamma}(\yesEx*))$ (similarly for $\noEx*$). By definition of $\hat{\gamma}$, we have $\hat{\gamma}(\yesEx*) = \yesEx*$, and $\HT[\ansTy*](\yesEx*)$ holds immediately by definition.
-  \item [Rule \ruleref{sta:pair}] We want to show $\HT[\prodTy*{A_1}{A_2}](\hat{\gamma}(\pairEx*{M_1}{M_2}))$. By definition of $\hat{\gamma}$, we have $\hat{\gamma}(\pairEx*{M_1}{M_2}) = \pairEx*{\hat{\gamma}(M_1)}{\hat{\gamma}(M_2)}$. Therefore, $\HT[\prodTy*{A_1}{A_2}](\pairEx*{\hat{\gamma}(M_1)}{\hat{\gamma}(M_2)})$ follows because $\pairEx*{\hat{\gamma}(M_1)}{\hat{\gamma}(M_2)} \stepsTo(*) \pairEx*{\hat{\gamma}(M_1)}{\hat{\gamma}(M_2)}$, and $\HT[A_1](\hat{\gamma}(M_1))$ and $\HT[A_2](\hat{\gamma}(M_2))$ by induction.
-  \item [Rule \ruleref{sta:prl}/\ruleref{sta:prr}] We want to show $\HT[A_1](\hat{\gamma}(\fstEx*{M}))$ (similarly for $\sndEx*{M}$). By definition of $\hat{\gamma}$, we have $\hat{\gamma}(\fstEx*{M}) = \fstEx*{\hat{\gamma}(M)}$. By induction we have $\HT[\prodTy*{A_1}{A_2}](\hat{\gamma}(M))$. Expanding the definition, we have $\hat{\gamma}(M) \stepsTo(*) \pairEx*{M_1}{M_2}$ and $\HT[A_1](M_2)$ and $\HT[A_2](M_2)$. Therefore, $\fstEx*{\hat{\gamma}(M)} \stepsTo(*) \fstEx*{\pairEx*{M_1}{M_2}} \stepsTo M_1$ (with $\HT[A_1](M_1)$). To conclude what we need to show, we appeal to \Cref{lem:head-expansion}.
-  \item [Rule \ruleref{sta:abs}] We want to show $\HT[\arrTy*{A_1}{A_2}](\hat{\gamma}(\lamEx*{x}{M}))$. By definition of $\hat{\gamma}$, we have $\hat{\gamma}(\lamEx*{x}{M}) = \lamEx*{x}{\hat{\gamma}(M)}$. There are two proof goals:
+  \item [Rule \ruleref{sta:var}] By assumption we have $\HT[\Gamma, \isOfTp{x}{A}](\gamma)$. We want to show $\HT[A](\widehat{\gamma}(x))$. By definition of $\widehat{\gamma}$, we have $\widehat{\gamma}(x) = \gamma(x)$, and $\HT[A](\gamma(x))$ follows immediately from $\HT[\Gamma, \isOfTp{x}{A}](\gamma)$.
+  \item [Rule \ruleref{sta:triv}] We want to show $\HT[\unitTy*](\widehat{\gamma}(\unitEx*))$. By definition of $\widehat{\gamma}$, we have $\widehat{\gamma}(\unitEx*) = \unitEx*$, and $\HT[\unitTy*](\unitEx*)$ holds immediately by definition.
+  \item [Rule \ruleref{sta:ans1}/\ruleref{sta:ans2}] We want to show $\HT[\ansTy*](\widehat{\gamma}(\yesEx*))$ (similarly for $\noEx*$). By definition of $\widehat{\gamma}$, we have $\widehat{\gamma}(\yesEx*) = \yesEx*$, and $\HT[\ansTy*](\yesEx*)$ holds immediately by definition.
+  \item [Rule \ruleref{sta:pair}] We want to show $\HT[\prodTy*{A_1}{A_2}](\widehat{\gamma}(\pairEx*{M_1}{M_2}))$. By definition of $\widehat{\gamma}$, we have $\widehat{\gamma}(\pairEx*{M_1}{M_2}) = \pairEx*{\widehat{\gamma}(M_1)}{\widehat{\gamma}(M_2)}$. Therefore, $\HT[\prodTy*{A_1}{A_2}](\pairEx*{\widehat{\gamma}(M_1)}{\widehat{\gamma}(M_2)})$ follows because $\pairEx*{\widehat{\gamma}(M_1)}{\widehat{\gamma}(M_2)} \stepsTo(*) \pairEx*{\widehat{\gamma}(M_1)}{\widehat{\gamma}(M_2)}$, and $\HT[A_1](\widehat{\gamma}(M_1))$ and $\HT[A_2](\widehat{\gamma}(M_2))$ by induction.
+  \item [Rule \ruleref{sta:prl}/\ruleref{sta:prr}] We want to show $\HT[A_1](\widehat{\gamma}(\fstEx*{M}))$ (similarly for $\sndEx*{M}$). By definition of $\widehat{\gamma}$, we have $\widehat{\gamma}(\fstEx*{M}) = \fstEx*{\widehat{\gamma}(M)}$. By induction we have $\HT[\prodTy*{A_1}{A_2}](\widehat{\gamma}(M))$. Expanding the definition, we have $\widehat{\gamma}(M) \stepsTo(*) \pairEx*{M_1}{M_2}$ and $\HT[A_1](M_2)$ and $\HT[A_2](M_2)$. Therefore, $\fstEx*{\widehat{\gamma}(M)} \stepsTo(*) \fstEx*{\pairEx*{M_1}{M_2}} \stepsTo M_1$ (with $\HT[A_1](M_1)$). To conclude what we need to show, we appeal to \Cref{lem:head-expansion}.
+  \item [Rule \ruleref{sta:abs}] We want to show $\HT[\arrTy*{A_1}{A_2}](\widehat{\gamma}(\lamEx*{x}{M}))$. By definition of $\widehat{\gamma}$, we have $\widehat{\gamma}(\lamEx*{x}{M}) = \lamEx*{x}{\widehat{\gamma}(M)}$. There are two proof goals:
   \begin{enumerate}
-    \item $\lamEx*{x}{\hat{\gamma}(M)} \stepsTo(*) \lamEx*{x}{\hat{\gamma}(M)}$, which is immediate.
-    \item For all $\HT[A_1](M')$, $\HT[A_2](\Sub{M'}{x}{\hat{\gamma}(M)})$. Fix arbitrary $\HT[A_1](M')$. By assumption we have $\HT[\Gamma](\gamma)$. Let $\gamma' = \gamma\{x \mapsto M'\}$. Then it is clear that $\HT[\Gamma, \isOfTp{x}{A_1}](\gamma')$ because $\HT[A_1](M')$. Then by induction we have $\HT[A_2](\hat{\gamma}'(M))$. It is clear that $\Sub{M'}{x}{\hat{\gamma}(M)} = \hat{\gamma}'(M)$ by construction of $\gamma'$. Therefore we conclude that $\HT[A_2](\Sub{M'}{x}{\hat{\gamma}(M)})$.
+    \item $\lamEx*{x}{\widehat{\gamma}(M)} \stepsTo(*) \lamEx*{x}{\widehat{\gamma}(M)}$, which is immediate.
+    \item For all $\HT[A_1](M')$, $\HT[A_2](\Sub{M'}{x}{\widehat{\gamma}(M)})$. Fix arbitrary $\HT[A_1](M')$. By assumption we have $\HT[\Gamma](\gamma)$. Let $\gamma' = \gamma\{x \mapsto M'\}$. Then it is clear that $\HT[\Gamma, \isOfTp{x}{A_1}](\gamma')$ because $\HT[A_1](M')$. Then by induction we have $\HT[A_2](\widehat{\gamma}'(M))$. It is clear that $\Sub{M'}{x}{\widehat{\gamma}(M)} = \widehat{\gamma}'(M)$ by construction of $\gamma'$. Therefore we conclude that $\HT[A_2](\Sub{M'}{x}{\widehat{\gamma}(M)})$.
   \end{enumerate}
-  \item [Rule \ruleref{sta:app}] We want to show $\HT[A_2](\hat{\gamma}(\appEx*{M_1}{M_2}))$. By definition of $\hat{\gamma}$, we have $\hat{\gamma}(\appEx*{M_1}{M_2}) = \appEx*{\hat{\gamma}(M_1)}{\hat{\gamma}(M_2)}$. By induction we have $\HT[\arrTy*{A_1}{A_2}](\hat{\gamma}(M_1))$ and $\HT[A_1](\hat{\gamma}(M_2))$. Expanding the definition, we have $\hat{\gamma}(M_1) \stepsTo(*) \lamEx*{x}{M_1'}$, and for all $\HT[A_1](M')$, $\HT[A_2](\Sub{M'}{x}{M_1'})$. Therefore, $$\appEx*{\hat{\gamma}(M_1)}{\hat{\gamma}(M_2)} \stepsTo(*) \appEx*{\lamEx*{x}{M_1'}}{\hat{\gamma}(M_2)} \stepsTo \Sub{\hat{\gamma}(M_2)}{x}{M_1'}$$ We have $\HT[A_2]{(\Sub{\hat{\gamma}(M_2)}{x}{M_1'})}$ by instantiating $M' = \hat{\gamma}(M_2)$ and $\HT[A_1](\hat{\gamma}(M_2))$ by induction. To conclude what we need to show, we appeal to \Cref{lem:head-expansion}.
+  \item [Rule \ruleref{sta:app}] We want to show $\HT[A_2](\widehat{\gamma}(\appEx*{M_1}{M_2}))$. By definition of $\widehat{\gamma}$, we have $\widehat{\gamma}(\appEx*{M_1}{M_2}) = \appEx*{\widehat{\gamma}(M_1)}{\widehat{\gamma}(M_2)}$. By induction we have $\HT[\arrTy*{A_1}{A_2}](\widehat{\gamma}(M_1))$ and $\HT[A_1](\widehat{\gamma}(M_2))$. Expanding the definition, we have $\widehat{\gamma}(M_1) \stepsTo(*) \lamEx*{x}{M_1'}$, and for all $\HT[A_1](M')$, $\HT[A_2](\Sub{M'}{x}{M_1'})$. Therefore, $$\appEx*{\widehat{\gamma}(M_1)}{\widehat{\gamma}(M_2)} \stepsTo(*) \appEx*{\lamEx*{x}{M_1'}}{\widehat{\gamma}(M_2)} \stepsTo \Sub{\widehat{\gamma}(M_2)}{x}{M_1'}$$ We have $\HT[A_2]{(\Sub{\widehat{\gamma}(M_2)}{x}{M_1'})}$ by instantiating $M' = \widehat{\gamma}(M_2)$ and $\HT[A_1](\widehat{\gamma}(M_2))$ by induction. To conclude what we need to show, we appeal to \Cref{lem:head-expansion}.
 \end{enumerate}
 % \begin{itemize}
 % \item \textsc{Case \ruleref{sta:triv}.} This is trivially true.
 % \item \textsc{Case \ruleref{sta:pair}.}
-% 	We want to show $\pairEx*{\hatM_1}{\hatM_2} \in \pairEx*{A_1}{A_2}$. That is
-% 	$\fstEx*{\pairEx*{\hatM_1}{\hatM_2}} \in A_1$
-% 	and $\fstEx*{\pairEx*{\hatM_1}{\hatM_2}} \in A_2$.
-% 	We know $\fstEx*{\pairEx*{\hatM_1}{\hatM_2}} \stepsTo{} \hatM_1$ (\ruleref{dyn:prl})
-% 	and $\sndEx*{\pairEx*{\hatM_1}{\hatM_2}} \stepsTo{} \hatM_2$ (\ruleref{dyn:prr}).
-% 	By induction we know $\hatM_1 \in A_1$ and $\hatM_2 \in A_2$.
+% 	We want to show $\pairEx*{\widehatM_1}{\widehatM_2} \in \pairEx*{A_1}{A_2}$. That is
+% 	$\fstEx*{\pairEx*{\widehatM_1}{\widehatM_2}} \in A_1$
+% 	and $\fstEx*{\pairEx*{\widehatM_1}{\widehatM_2}} \in A_2$.
+% 	We know $\fstEx*{\pairEx*{\widehatM_1}{\widehatM_2}} \stepsTo{} \widehatM_1$ (\ruleref{dyn:prl})
+% 	and $\sndEx*{\pairEx*{\widehatM_1}{\widehatM_2}} \stepsTo{} \widehatM_2$ (\ruleref{dyn:prr}).
+% 	By induction we know $\widehatM_1 \in A_1$ and $\widehatM_2 \in A_2$.
 % 	Appeal to backwards closure to conclude the proof.
-% \item \textsc{Case \ruleref{sta:prl} and \ruleref{sta:prr}.} By induction we know $\hat{M} \in \pairEx*{A_1}{A_2}$,
-% therefore by definition $\fstEx*{\hatM} \in A_1$ and $\fstEx*{\hatM} \in A_2$.
-% \item \textsc{Case \ruleref{sta:abs}.} We want to show $\lamEx*{x}{\hatM} \in \arrTy*{A_1}{A_2}$.
-% Fix arbitrary $N \in A_1$. We have $\appEx*{(\lamEx*{x}{\hatM})}{N} \stepsTo{} \Sub{N}{x}{\hatM}$
-% (\ruleref{dyn:app}). By induction we know $\Sub{N}{x}{\hatM} \in A_2$. Conclude by backwards closure.
-% \item \textsc{Case \ruleref{sta:app}.} We know $\hatM_1 \in \arrTy*{A_1}{A_2}$
-% and $\hatM_1 \in A_2$. By definition we have $\appEx*{\hatM_1}{\hatM_2} \in A_2$.
+% \item \textsc{Case \ruleref{sta:prl} and \ruleref{sta:prr}.} By induction we know $\widehat{M} \in \pairEx*{A_1}{A_2}$,
+% therefore by definition $\fstEx*{\widehatM} \in A_1$ and $\fstEx*{\widehatM} \in A_2$.
+% \item \textsc{Case \ruleref{sta:abs}.} We want to show $\lamEx*{x}{\widehatM} \in \arrTy*{A_1}{A_2}$.
+% Fix arbitrary $N \in A_1$. We have $\appEx*{(\lamEx*{x}{\widehatM})}{N} \stepsTo{} \Sub{N}{x}{\widehatM}$
+% (\ruleref{dyn:app}). By induction we know $\Sub{N}{x}{\widehatM} \in A_2$. Conclude by backwards closure.
+% \item \textsc{Case \ruleref{sta:app}.} We know $\widehatM_1 \in \arrTy*{A_1}{A_2}$
+% and $\widehatM_1 \in A_2$. By definition we have $\appEx*{\widehatM_1}{\widehatM_2} \in A_2$.
 % \item \textsc{Case \ruleref{sta:ans1} and \ruleref{sta:ans2}.} immediate.
 % \end{itemize}
 We have considered all cases.
@@ -354,7 +354,7 @@ Our initial proof goal comes out as a corollary by taking an empty substitution.
   If $\isOfTp{M}{\ansTy*}$ then $M \evalsTo \yesEx*$ or $M \evalsTo \noEx*$.
 \end{corollary}
 \begin{proof}
-  Consider \Cref{thm:fundamental} with $\Gamma = \cdot$, $A = \ansTy*$, and $\gamma = \{\}$. It should be clear that $\HT[\cdot](\{\})$ is vacuously true. Then we have $\HT[\ansTy*](\hat{\gamma}(M))$ from the theorem, which is $\HT[\ansTy*](M)$. By definition of $\HT[\ansTy*](M)$, we have $M \evalsTo \yesEx*$ or $M \evalsTo \noEx*$.
+  Consider \Cref{thm:fundamental} with $\Gamma = \cdot$, $A = \ansTy*$, and $\gamma = \{\}$. It should be clear that $\HT[\cdot](\{\})$ is vacuously true. Then we have $\HT[\ansTy*](\widehat{\gamma}(M))$ from the theorem, which is $\HT[\ansTy*](M)$. By definition of $\HT[\ansTy*](M)$, we have $M \evalsTo \yesEx*$ or $M \evalsTo \noEx*$.
 \end{proof}
 
 \section{Reorganizing the logical relation}
@@ -477,30 +477,30 @@ If $\Gamma \entails{\isOfTp{M}{A}}$ then $\Gamma \gg M \in A$.
 \begin{proof}
 Go by induction on the typing derivation. Here we only consider statics rules related to $\natTy*$.
 \begin{enumerate}
-  \item [Rule \ruleref{sta:zero}] We want to show $\HT[\natTy*](\hat{\gamma}(\zeroEx*))$. By definition of $\hat{\gamma}$, we have $\hat{\gamma}(\zeroEx*) = \zeroEx*$. Moreover, $\HT[\natTy*](\zeroEx*)$ holds because $\zeroEx* \evalsTo \zeroEx*$.
-  \item [Rule \ruleref{sta:succ}] We want to show $\HT[\natTy*](\hat{\gamma}(\succEx*{M}))$. By definition of $\hat{\gamma}$, we have $\hat{\gamma}(\succEx*{M}) = \succEx*{\hat{\gamma}(M)}$. Clearly, $\succEx*{\hat{\gamma}(M)} \evalsTo \succEx*{\hat{\gamma}(M)}$, so it remains to show $\HT[\natTy*](\hat{\gamma}(M))$, which is immediate by induction.
-  \item [Rule \ruleref{sta:natit}] We want to show $\HT[A](\hat{\gamma}(\natitEx*{M}{M_z}{x}{M_s}))$. By definition of $\hat{\gamma}$, we have $\hat{\gamma}(\natitEx*{M}{M_z}{x}{M_s}) = \natitEx*{\hat{\gamma}(M)}{\hat{\gamma}(M_z)}{x}{\hat{\gamma}(M_s)}$.
+  \item [Rule \ruleref{sta:zero}] We want to show $\HT[\natTy*](\widehat{\gamma}(\zeroEx*))$. By definition of $\widehat{\gamma}$, we have $\widehat{\gamma}(\zeroEx*) = \zeroEx*$. Moreover, $\HT[\natTy*](\zeroEx*)$ holds because $\zeroEx* \evalsTo \zeroEx*$.
+  \item [Rule \ruleref{sta:succ}] We want to show $\HT[\natTy*](\widehat{\gamma}(\succEx*{M}))$. By definition of $\widehat{\gamma}$, we have $\widehat{\gamma}(\succEx*{M}) = \succEx*{\widehat{\gamma}(M)}$. Clearly, $\succEx*{\widehat{\gamma}(M)} \evalsTo \succEx*{\widehat{\gamma}(M)}$, so it remains to show $\HT[\natTy*](\widehat{\gamma}(M))$, which is immediate by induction.
+  \item [Rule \ruleref{sta:natit}] We want to show $\HT[A](\widehat{\gamma}(\natitEx*{M}{M_z}{x}{M_s}))$. By definition of $\widehat{\gamma}$, we have $\widehat{\gamma}(\natitEx*{M}{M_z}{x}{M_s}) = \natitEx*{\widehat{\gamma}(M)}{\widehat{\gamma}(M_z)}{x}{\widehat{\gamma}(M_s)}$.
 
   Define predicate\footnote{Be aware that the definition of $\mathcal{P}$ ``bakes in'' the substitution $\gamma$ as well as the $M_z$ and $M_s$.
-  In other words $\mathcal{P}$ is defined for a specific use of the general induction principle.} $\mathcal{P}(-) \triangleq \HT[A](\natitEx*{-}{\hat{\gamma}(M_z)}{x}{\hat{\gamma}(M_s)})$. Our goal is to show that $\mathcal{P}(-)$ satisfies two conditions mentioned in \Cref{def:ht-nat}.
+  In other words $\mathcal{P}$ is defined for a specific use of the general induction principle.} $\mathcal{P}(-) \triangleq \HT[A](\natitEx*{-}{\widehat{\gamma}(M_z)}{x}{\widehat{\gamma}(M_s)})$. Our goal is to show that $\mathcal{P}(-)$ satisfies two conditions mentioned in \Cref{def:ht-nat}.
 
   \begin{enumerate}
     \item [1.] Suppose $M \evalsTo \zeroEx*$. We want to show $\mathcal{P}(M)$. We note the evaluation series:
     \[
-      \natitEx*{M}{\hat{\gamma}(M_z)}{x}{\hat{\gamma}(M_s)} \stepsTo(*) \natitEx*{\zeroEx*}{\hat{\gamma}(M_z)}{x}{\hat{\gamma}(M_s)} \stepsTo \hat{\gamma}(M_z)
+      \natitEx*{M}{\widehat{\gamma}(M_z)}{x}{\widehat{\gamma}(M_s)} \stepsTo(*) \natitEx*{\zeroEx*}{\widehat{\gamma}(M_z)}{x}{\widehat{\gamma}(M_s)} \stepsTo \widehat{\gamma}(M_z)
     \]
-    By induction on the second premise, we have $\HT[A](\hat{\gamma}(M_z))$. Therefore, $\mathcal{P}(M)$ holds by appealing to \Cref{lem:head-expansion}.
+    By induction on the second premise, we have $\HT[A](\widehat{\gamma}(M_z))$. Therefore, $\mathcal{P}(M)$ holds by appealing to \Cref{lem:head-expansion}.
     \item [2.] Suppose $M \evalsTo \succEx*{M'}$ and $\mathcal{P}(M')$. We want to show $\mathcal{P}(M)$. We note the evaluation series:
     \begin{align*}
-      \natitEx*{M}{\hat{\gamma}(M_z)}{x}{\hat{\gamma}(M_s)}
-      & \stepsTo(*) \natitEx*{\succEx*{M'}}{\hat{\gamma}(M_z)}{x}{\hat{\gamma}(M_s)} \\
-      & \stepsTo \Sub{\natitEx*{M'}{\hat{\gamma}(M_z)}{x}{\hat{\gamma}(M_s)}}{x}{\hat{\gamma}(M_s)}
+      \natitEx*{M}{\widehat{\gamma}(M_z)}{x}{\widehat{\gamma}(M_s)}
+      & \stepsTo(*) \natitEx*{\succEx*{M'}}{\widehat{\gamma}(M_z)}{x}{\widehat{\gamma}(M_s)} \\
+      & \stepsTo \Sub{\natitEx*{M'}{\widehat{\gamma}(M_z)}{x}{\widehat{\gamma}(M_s)}}{x}{\widehat{\gamma}(M_s)}
     \end{align*}
-    Assumption $\mathcal{P}(M')$ says $\HT[A](\natitEx*{M'}{\hat{\gamma}(M_z)}{x}{\hat{\gamma}(M_s)})$. By assumption we have $\HT[\Gamma](\gamma)$. Define $\gamma' = \gamma\{x \mapsto \natitEx*{M'}{\hat{\gamma}(M_z)}{x}{\hat{\gamma}(M_s)}\}$. It is clear that $\HT[\Gamma, \isOfTp{x}{A}](\gamma')$ from aforementioned two conditions.
+    Assumption $\mathcal{P}(M')$ says $\HT[A](\natitEx*{M'}{\widehat{\gamma}(M_z)}{x}{\widehat{\gamma}(M_s)})$. By assumption we have $\HT[\Gamma](\gamma)$. Define $\gamma' = \gamma\{x \mapsto \natitEx*{M'}{\widehat{\gamma}(M_z)}{x}{\widehat{\gamma}(M_s)}\}$. It is clear that $\HT[\Gamma, \isOfTp{x}{A}](\gamma')$ from aforementioned two conditions.
 
-    By induction on the third premise, we have $\HT[A](\hat{\gamma}'(M_s))$. By construction we have $\hat{\gamma}'(M_s) = \Sub{\natitEx*{M'}{\hat{\gamma}(M_z)}{x}{\hat{\gamma}(M_s)}}{x}{\hat{\gamma}(M_s)}$.  Therefore, $\mathcal{P}(M)$ holds by appealing to \Cref{lem:head-expansion}.
+    By induction on the third premise, we have $\HT[A](\widehat{\gamma}'(M_s))$. By construction we have $\widehat{\gamma}'(M_s) = \Sub{\natitEx*{M'}{\widehat{\gamma}(M_z)}{x}{\widehat{\gamma}(M_s)}}{x}{\widehat{\gamma}(M_s)}$.  Therefore, $\mathcal{P}(M)$ holds by appealing to \Cref{lem:head-expansion}.
   \end{enumerate}
-  By induction on the first premise, we have $\HT[\natTy*](\hat{\gamma}(M))$. Since $\HT[\natTy*](-)$ is the strongest predicate, it must follow that $\HT[\natTy*](\hat{\gamma}(M))$ implies $\mathcal{P}(\hat{\gamma}(M))$, the latter of which is what we want to show.
+  By induction on the first premise, we have $\HT[\natTy*](\widehat{\gamma}(M))$. Since $\HT[\natTy*](-)$ is the strongest predicate, it must follow that $\HT[\natTy*](\widehat{\gamma}(M))$ implies $\mathcal{P}(\widehat{\gamma}(M))$, the latter of which is what we want to show.
 \end{enumerate}
 \end{proof}
 
@@ -510,7 +510,7 @@ This result would be sufficient to prove termination on natural numbers.
   If $\isOfTp{M}{\natTy*}$, then $M \evalsTo \zeroEx*$ or $M \evalsTo \succEx*{N}$ for some $N$.
 \end{corollary}
 \begin{proof}
-  Consider \Cref{thm:fundamental-nat} with $\Gamma = \cdot$, $A = \natTy*$, and $\gamma = \{\}$. It should be clear that $\HT[\cdot](\{\})$ is vacuously true. Then we have $\HT[\natTy*](\hat{\gamma}(M))$ from the theorem, which is $\HT[\natTy*](M)$.
+  Consider \Cref{thm:fundamental-nat} with $\Gamma = \cdot$, $A = \natTy*$, and $\gamma = \{\}$. It should be clear that $\HT[\cdot](\{\})$ is vacuously true. Then we have $\HT[\natTy*](\widehat{\gamma}(M))$ from the theorem, which is $\HT[\natTy*](M)$.
 
   Define $\mathcal{Q}(M) \triangleq (M \evalsTo \zeroEx*) \lor (\exists N. M \evalsTo \succEx*{N})$. We show that $\mathcal{Q}(-)$ satisfies the two conditions in \Cref{def:ht-nat}.
   \begin{enumerate}
