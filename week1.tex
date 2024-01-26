@@ -450,7 +450,7 @@ Again, our goal is to prove termination for the calculus with natural numbers. F
 
 \begin{definition}[Hereidtary Termination for $\natTy*$]\label{def:ht-nat}
   Define $\HT[\natTy*](M)$ to the \emph{strongest} predicate
-  \footnote{When viewed as sets, the smallest set of terms.} $\mathcal{P}$ on terms $M$ such that one of the following is true:
+  \footnote{When viewed as sets, the smallest set of terms.} $\mathcal{P}$ on terms $M$ such that the following are true:
 \begin{enumerate}
   \item If $M \evalsTo \zeroEx*$, then $\mathcal{P}(M)$.
   \item If $M \evalsTo \succEx*{M'}$ and $\mathcal{P}(M')$, then $\mathcal{P}(M)$.
