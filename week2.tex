@@ -34,7 +34,6 @@ $$
 The statics is given in a standard way:
 
 \begin{mathpar}
-% TODO: ensure I, E are correct here
 \defrule[T-Conat-I][sta:gen]
     {\Gamma \entails{\isOfTp{M}{A}} \\ \Gamma, \isOfTp{x}{A} \entails{\isOfTp{N}{\sumTy*{\unitTy*}{A}}}}
     {\Gamma \entails{\isOfTp{\genEx*{M}{x}{N}}{\conatTy}}}
@@ -146,7 +145,6 @@ terms $\isOfTp{M}{\conatTy}$ such that if $\mathcal{P}(M)$, then either:
     \item $\outEx*{M} \evalsTo \injEx*<2>{M'}$ and $\mathcal{P}(M')$
 \end{enumerate}
 
-% TODO: ask harrison about this
 Observe this is dualized compared to the case for natural numbers, where having
 the analogous properties implied $\mathcal{P}(M)$--- rather than
 $\mathcal{P}(M)$ implying these properties. This mirrors the structure of
@@ -223,8 +221,11 @@ If $\Gamma \entails{\isOfTp{M}{A}}$ then $\Gamma \gg M \in A$.
             consistency later:
 
             \begin{definition}[Definition of $P$]
+                Assume for all $M : A$ we have $\HT[A](M)$.
                 Define $P(M) \triangleq M \evalsTo G(M')$ for some $\HT[A](M')$.
             \end{definition}
+
+            % NOTE [Harrison]: This doesn't work!
 
             % To show that this satisfies consistency with $\HT[\conatTy]$, show
             % that if $P(X)$ then $(\sumTy*{\unitTy*}{P})(\outEx*{X})$.
