@@ -11,5 +11,26 @@
 \begin{document}
 \maketitle
 
+\section{Exact Equality}
+
+Previously, we defined the unary relation on terms $HT_A(M)$, also written as $M \in A$, denoting that $M$ satisfies the behavioral specification of hereditary termination given by $A$.
+Along these lines, we will be defining a binary relation that can be thought of as $EQ_A(M, M')$, which we write $M \dot{=} M' \in A$, representing Exact (or Semantic) Equality in type $A$.
+Again, we define this relation by induction on the structure of the closed type $A$. We redefine $M \in A$ to mean $M \dot{=} M \in A$. 
+We are encouraged to view $A$ as a specification, making this construction an invocation of the ``propositions as types'' principle. 
+Our ``theory of truth'' in defining the satisfaction of the proposition $M \dot{=} M' \in A$ will be based in the computation of $M$ and $M'$. 
+
+\begin{definition}[Exact Equality]
+    $$
+  \begin{array}{cll}
+      M \dot{=} M' \in \unitTy* & \Iff & M, M' \evalsTo \unitEx* \\
+       %(M \evalsTo \yesEx*) \lor (M \evalsTo \noEx*) \\
+      M \dot{=} M' \in \ansTy* & \Iff & M, M' \evalsTo \yesEx* \text{ or } M, M' \evalsTo \noEx* \\
+      M \dot{=} M' \in \prodTy*{A_1}{A_2} & \Iff &
+         M \evalsTo \pairEx*{M_1}{M_2} \text{ and } M' \evalsTo \pairEx*{M_1'}{M_2'}\\ & & \text{ where } M_1 \dot{=} M_1' \in A_1 \text{ and } M_2 \dot{=} M_2' \in A_2 \\
+      M \dot{=} M' \in \arrTy*{A_1}{A_2} & \Iff & M \evalsTo \lamEx*{x}{M_2} \text{ and } M' \evalsTo \lamEx*{x}{M_2'}\\ & & 
+         \text{ where } M_1 \dot{=} M_1' \in A_1 \text{ implies } \Sub{M_1}{x}{M_2} \dot{=} \Sub{M_1'}{x}{M_2'} \in A_2 \\
+  \end{array}
+  $$
+  \end{definition}
 
 \end{document}
