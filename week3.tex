@@ -23,14 +23,35 @@ Our ``theory of truth'' in defining the satisfaction of the proposition $M \dot{
     $$
   \begin{array}{cll}
       M \dot{=} M' \in \unitTy* & \Iff & M, M' \evalsTo \unitEx* \\
-       %(M \evalsTo \yesEx*) \lor (M \evalsTo \noEx*) \\
       M \dot{=} M' \in \ansTy* & \Iff & M, M' \evalsTo \yesEx* \text{ or } M, M' \evalsTo \noEx* \\
       M \dot{=} M' \in \prodTy*{A_1}{A_2} & \Iff &
          M \evalsTo \pairEx*{M_1}{M_2} \text{ and } M' \evalsTo \pairEx*{M_1'}{M_2'}\\ & & \text{ where } M_1 \dot{=} M_1' \in A_1 \text{ and } M_2 \dot{=} M_2' \in A_2 \\
-      M \dot{=} M' \in \arrTy*{A_1}{A_2} & \Iff & M \evalsTo \lamEx*{x}{M_2} \text{ and } M' \evalsTo \lamEx*{x}{M_2'}\\ & & 
-         \text{ where } M_1 \dot{=} M_1' \in A_1 \text{ implies } \Sub{M_1}{x}{M_2} \dot{=} \Sub{M_1'}{x}{M_2'} \in A_2 \\
+      M \dot{=} M' \in \arrTy*{A_1}{A_2} & \Iff & M \evalsTo \lamEx*{x}{M_2} \text{ and } M' \evalsTo \lamEx*{x}{M_2'} \text{ where } M_1 \dot{=} M_1' \in A_1 \\ & & 
+         \text{ implies } \Sub{M_1}{x}{M_2} \dot{=} \Sub{M_1'}{x}{M_2'} \in A_2 \\
   \end{array}
   $$
-  \end{definition}
+\end{definition}
+
+These definitions essentially derive from our treatment of types as specifications. For each type, we reduce $M$ and $M'$ to values, and close under head expansion for the subterms. 
+Note that our definition of exact equaltiy in the arrow type does not require $M_1$ and $M_1'$ to be identical, only semantically equal. 
+The impact of this will become apparent as more concepts are added.
+
+Now, we extend to open terms:
+
+
+\begin{definition}[$\Gamma \gg M \dot{=} M' \in A$]
+    $\gamma \dot{=} \gamma' \in \Gamma$ implies $\hat{\gamma} M \dot{=} \hat{\gamma'} M' \in A$ 
+\end{definition}
+
+Where $\gamma \dot{=} \gamma' \in \Gamma$ is variable-by-variable equality of the terms in substitutions $\gamma$ and $\gamma'$. 
+Shortly, we will define judgemental equality $\equiv$ and prove that $\Gamma \entails{M \equiv N : A}$ implies $\Gamma \gg M \dot{=} N \in A$.
+In essence, this is showing that proof implies truth. First, we establish some lemmas about exact equality.
+
+\begin{lemma}[Head Expansion]\label{lem:headexpansion}
+    If $M \dot{=} M' \in A$ and $N \to_\beta M$ then $N \dot{=} M' \in A$. Likewise, if $N' \to_\beta M'$ then $M \dot{=} N' \in A$. 
+\end{lemma}
+\begin{proof}
+By induction on $A$, direct from the definition of exact equality.
+\end{proof}
 
 \end{document}
