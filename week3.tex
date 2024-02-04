@@ -102,15 +102,58 @@ The P.E.R. trick allows us to bridge the gap between these two equalities, placi
 Reflexivity will hold if and only if a term is well-typed.
 
 \begin{theorem}[Reflexivity]
-    If $\Gamma \entails{M : A}$ then $\Gamma \gg M \in A$, meaning $\Gamma \gg M \dot{=} M \in A$.
+    If $\Gamma \entails{\isOfTp{M}{A}}$ then $\Gamma \gg M \in A$, meaning $\Gamma \gg M \dot{=} M \in A$.
 \end{theorem}
-The proof of this was left as an exercise. It is necessary for this theorem to hold, otherwise the \textsc{refl} inference rule for judgemental equality is unsound.
+The proof of this was left as an exercise. It is necessary for this theorem to hold, otherwise the $R$ inference rule for judgemental equality is unsound.
 
-\section{Judgemental Equality}
+\section{Judgemental Equality}\label{sec:jeq}
 
-We define $\Gamma \entails{M \equiv N : A}$ with the following inference rules:
+We define $\Gamma \entails{\isOfTp{M \equiv N}{A}}$ via inference rules. With the first set of rules, we axiomatically prescribe judgemental equality to be a P.E.R. with reflexivity
+for all well-typed terms. 
 
 \begin{mathpar}
+
+\defrule[R][jeq:r]
+{\Gamma \entails{\isOfTp{M}{A}}}
+{ \Gamma \entails{\isOfTp{M \equiv M}{A}} }
+
+\defrule[S][jeq:s]
+{\Gamma \entails{\isOfTp{M \equiv N}{A}} }
+{ \Gamma \entails{\isOfTp{N \equiv M}{A}} }
+
+\defrule[T][jeq:t]
+{\Gamma \entails{\isOfTp{M \equiv N}{A}} \\ \Gamma \entails{\isOfTp{N \equiv P}{A}} }
+{ \Gamma \entails{\isOfTp{M \equiv P}{A}} }
+
+\end{mathpar}
+
+The second set of inference rules describe how to construct equivalent terms from equivalent subterms.
+
+\begin{mathpar}
+
+\defrule[Pair][jeq:pair]
+{\Gamma \entails{\isOfTp{M_1 \equiv N_1}{A_1}} \\ \Gamma \entails{\isOfTp{M_2 \equiv N_2}{A_2}}}
+{ \Gamma \entails{\isOfTp{\pairEx*{M_1}{M_2} \equiv \pairEx*{N_1}{N_2}}{\prodTy*{A_1}{A_2}}} }
+
+\defrule[Proj][jeq:proj]
+{\Gamma \entails{\isOfTp{M \equiv N}{\prodTy*{A_1}{A_2}}} }
+{ \Gamma \entails{\isOfTp{M \cdot i \equiv N \cdot i}{A_i}}}
+
+\defrule[Lam][jeq:lam]
+{\Gamma, \isOfTp{x}{A_1} \entails{\isOfTp{M \equiv N}{A_2}} }
+{ \Gamma \entails{\isOfTp{\lamEx*{x}{M} \equiv \lamEx*{x}{N}}{\arrTy*{A_1}{A_2}}}}
+
+\defrule[App][jeq:app]
+{\Gamma \entails{\isOfTp{M \equiv N}{\arrTy*{A_1}{A_2}}} \\ \Gamma \entails{\isOfTp{M_1 \equiv N_1}{A_1}} }
+{ \Gamma \entails{\isOfTp{\appEx*{M}{M_1} \equiv \appEx*{N}{N_1}}{A_2}}}
+
+\end{mathpar}
+
+And finally, the third set of rules concern $\beta$ and $\eta$ equality.
+
+\begin{mathpar}
+
+\defrule[]
 
 \end{mathpar}
 
