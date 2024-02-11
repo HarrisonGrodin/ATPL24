@@ -175,4 +175,48 @@ And finally, the third set of rules concern $\beta$ and $\eta$ equality.
 
 \end{mathpar}
 
+We can now state the fundemental theorem for this logical relation.
+
+\begin{theorem}[FTLR]
+If $\Gamma \entails{\isOfTp{M \equiv N}{A}}$ then $\Gamma \gg M \dot{=} N \in A$.
+\end{theorem}
+\begin{proof}
+We go by induction on the derivation of $\Gamma \entails{\isOfTp{M \equiv N}{A}}$. 
+\begin{enumerate}
+  \item For the first set of rules ($R$, $S$, and $T$) we make use of the reflexivity theorem as well as the lemma stating that exact equality is a P.E.R.
+  \item For the second set of rules (\textsc{Pair}, \textsc{Proj}, \textsc{Lam}, \textsc{App}), the claim follows fairly easily from the definition of exact quality after applying the induction hypothesis. Occasionally, head expansion is necessary.
+  \item For the third set of rules ($\eta_1$, $\beta_\times$, $\eta_\times$, $\beta_\to$, $\eta_\to$), we make use of the head expansion lemma and the reflexivity theorem.
+\end{enumerate}
+\end{proof}
+
+\begin{remark}[Zig-Zag Closure]
+
+Closed exact equality is zig-zag complete. That is, if $M \dot{=} M' \in A$, $N \dot{=} M' \in A$, and $N \dot{=} N' \in A$, then $M \dot{=} N' \in A$. This can be used instead of the P.E.R. trick to prove the FTLR. It will come up later in the course as a useful generalization of the P.E.R. trick that can handle settings where the types of the terms being judged equal are different.
+
+\end{remark}
+
+
+\section{More Types}
+
+In this section, we'll extend the notion of exact equality to more types, namely $0$, $+$, $\natTy*$, and $\conatTy*$.
+
+\begin{definition}[Exact Equality, Continued]
+    $$
+  \begin{array}{cll}
+      M \dot{=} M' \in 0 & \Iff & \text{never} \\
+      \\
+      M \dot{=} M' \in \sumTy*{A_1}{A_2} & \Iff & \text{for some } i \in \{1, 2\}, M \evalsTo \injEx*<i>{M_i} \text{ and } M' \evalsTo \injEx*<i>{M'_i} \\
+      & & \text{where $M_i \dot{=} M'_i$} \\
+      \\
+      M \dot{=} M' \in \natTy* & \Iff & \text{$\mathcal P(M, M')$, where $\mathcal P$ is the strongest relation} \\
+      & & \text{such that $\mathcal P(M, M')$ if either $M, M' \evalsTo \zeroEx*$} \\
+      & & \text{or $M \evalsTo \succEx*{N}$, $M' \evalsTo \succEx*{N'}$ with $\mathcal P(N, N')$} \\
+      \\
+      M \dot{=} M' \in \conatTy* & \Iff & \text{$\mathcal Q(M, M')$, where $\mathcal Q$ is the weakest relation} \\
+      & & \text{such that $\mathcal Q(M, M')$ if either $\outEx*{M}, \outEx*{M'} \evalsTo \injEx*<1>{\unitEx*}$} \\
+      & & \text{or $\outEx*{M} \evalsTo \injEx*<2>{N}$, $\outEx*{M'} \evalsTo \injEx*<2>{N'}$ with $\mathcal Q(N, N')$} \\
+  \end{array}
+  $$
+\end{definition}
+
 \end{document}
