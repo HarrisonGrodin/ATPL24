@@ -153,7 +153,25 @@ And finally, the third set of rules concern $\beta$ and $\eta$ equality.
 
 \begin{mathpar}
 
-\defrule[]
+\defrule[$\eta_1$][jeq:eta1]
+{\Gamma \entails{\isOfTp{M}{\unitTy*}}}
+{\Gamma \entails{\isOfTp{M \equiv \unitEx*}{\unitTy*}}}
+
+\defrule[$\beta_\times$][jeq:betapair]
+{\Gamma \entails{\isOfTp{M_1}{A_1}} \\ \Gamma \entails{\isOfTp{M_2}{A_2}}}
+{\Gamma \entails{\isOfTp{\projEx*<i>{\pairEx*{M_1}{M_2}} \equiv M_i}{A_i}}}
+
+\defrule[$\eta_\times$][jeq:etapair]
+{\Gamma \entails{\isOfTp{M}{\prodTy*{A_1}{A_2}}}}
+{\Gamma \entails{\isOfTp{\pairEx*{\projEx*<1>{M}}{\projEx*<2>{M}} \equiv M}{\prodTy*{A_1}{A_2}}}}
+
+\defrule[$\beta_\to$][jeq:betaarr]
+{\Gamma, \isOfTp{x}{A_1} \entails{\isOfTp{M_2}{A_2}} \\ \Gamma \entails{\isOfTp{M_1}{A_1}}}
+{\Gamma \entails{\isOfTp{\appEx*{\lamEx*{x}{M_2}}{M_1} \equiv \Sub{M_1}{x}{M_2}}{A_2}}}
+
+\defrule[$\eta_\to$][jeq:etaarr]
+{\Gamma \entails{\isOfTp{M}{\arrTy*{A_1}{A_2}}}}
+{\Gamma \entails{\isOfTp{\lamEx*{x}{\appEx*{M}{x}} \equiv M}{\arrTy*{A_1}{A_2}}}}
 
 \end{mathpar}
 
