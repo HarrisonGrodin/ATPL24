@@ -1,0 +1,238 @@
+% latexmk -pdf week3
+
+\documentclass[letterpaper]{article}
+
+\input{setup}
+\input{defns}
+
+\title{15-791 ATPL \\ Week 3 Notes}
+\author{Nathan Glover and Chase Norman}
+\date{\today}
+\begin{document}
+\maketitle
+
+This week, we introduce the notion of ``exact'' equality for our language with arrow, product, and unit types.
+We then define judgmental equality and validate the equational theory two separate ways (The P.E.R. trick and zig-zag closure).
+The second of these ways will be merely an exercise now, but will be essential for binary relations between unequal types.
+In particular, we will revisit such notions in Week 4 with Girard's method and proving parametricity.
+
+\section{Exact Equality}
+
+Previously, we defined the unary relation on terms $HT_A(M)$, also written as $M \in A$, denoting that $M$ satisfies the behavioral specification of hereditary termination given by $A$.
+Along these lines, we will be defining a binary relation that can be thought of as $EQ_A(M, M')$, which we write $M \dot{=} M' \in A$, representing Exact (or Semantic) Equality in type $A$.
+Again, we define this relation by induction on the structure of the closed type $A$. We redefine $M \in A$ to mean $M \dot{=} M \in A$.
+We are encouraged to view $A$ as a specification, making this construction an invocation of the ``propositions as types'' principle.
+Our ``theory of truth'' in defining the satisfaction of the proposition $M \dot{=} M' \in A$ will be based in the computation of $M$ and $M'$.
+
+\begin{definition}[Exact Equality]
+    $$
+  \begin{array}{cll}
+      M \dot{=} M' \in \unitTy* & \Iff & M, M' \mapsto^* \unitEx* \\
+      M \dot{=} M' \in \ansTy* & \Iff & M, M' \mapsto^* \yesEx* \text{ or } M, M' \mapsto^* \noEx* \\
+      M \dot{=} M' \in \prodTy*{A_1}{A_2} & \Iff &
+         M \mapsto^* \pairEx*{M_1}{M_2} \text{ and } M' \mapsto^* \pairEx*{M_1'}{M_2'} \text{ where } \\ & & M_1 \dot{=} M_1' \in A_1 \text{ and } M_2 \dot{=} M_2' \in A_2 \\
+      M \dot{=} M' \in \arrTy*{A_1}{A_2} & \Iff & M \mapsto^* \lamEx*{x}{M_2} \text{ and } M' \mapsto^* \lamEx*{x}{M_2'} \text{ where }\\ & &
+      M_1 \dot{=} M_1' \in A_1 \text{ implies } \Sub{M_1}{x}{M_2} \dot{=} \Sub{M_1'}{x}{M_2'} \in A_2 \\
+  \end{array}
+  $$
+\end{definition}
+
+These definitions essentially derive from our treatment of types as specifications. For each type, we reduce $M$ and $M'$ to values, and close under head expansion for the subterms.
+Note that our definition of exact equality in the arrow type does not require $M_1$ and $M_1'$ to be identical, only semantically equal.
+The impact of this will become apparent as more concepts are added. We described hereditary termination as a term ``behaving'' as an element of a type $A$.
+In this same manner, we can think of exact equality as the ``co-behavior'' of two elements of type $A$.
+
+Now, we extend to open terms:
+
+
+\begin{definition}[$\Gamma \gg M \dot{=} M' \in A$]
+    $\gamma \dot{=} \gamma' \in \Gamma$ implies $\hat{\gamma} M \dot{=} \hat{\gamma'} M' \in A$
+\end{definition}
+
+Where $\gamma \dot{=} \gamma' \in \Gamma$ is variable-by-variable equality of the terms in substitutions $\gamma$ and $\gamma'$.
+Shortly, we will define judgmental equality $\equiv$ and prove that $\Gamma \entails{M \equiv N : A}$ implies $\Gamma \gg M \dot{=} N \in A$.
+In essence, this is showing that proof implies truth. First, we establish some lemmas about exact equality.
+
+\begin{lemma}[Head Expansion]\label{lem:headexpansion}
+    If $M \dot{=} M' \in A$ and $N \mapsto^* M$ then $N \dot{=} M' \in A$. Likewise, if $N' \mapsto^* M'$ then $M \dot{=} N' \in A$.
+\end{lemma}
+\begin{proof}
+By induction on $A$, direct from the definition of exact equality.
+\end{proof}
+
+\begin{lemma}[Partial Equivalence Relation -- P.E.R.]
+    For all $A$, exact equality in $A$ is symmetric and transitive.
+\end{lemma}
+\begin{proof}
+We prove these properties simultaneously, and by induction on $A$. We will require symmetry to prove transitivity in the case of the arrow type.
+
+\begin{enumerate}
+    \item Case $A = \unitTy*$: Direct from the symmetry and transitivity of logical and.
+    \item Case $A = \ansTy*$: Symmetry follows from the symmetry of logical and. For transitivity we observe that $M \mapsto^* \yesEx*$ and $M \mapsto^* \noEx*$
+    are mutually exclusive for any term $M$. Therefore, if $M \dot{=} M' \in \ansTy*$ and $M' \dot{=} M'' \in \ansTy*$, we know $M$ and $M''$ must evaluate to
+    the same value as $M$ and $M''$, completing the proof.
+    \item Case $A = \prodTy*{A_1}{A_2}$:
+    \begin{enumerate}
+        \item Apply symmetry from the inductive hypothesis on $M_1 \dot{=} M_1' \in A_1$ and $M_2 \dot{=} M_2' \in A_2$. The result follows directly.
+        \item Apply transitivity from the inductive hypothesis on $M_1 \dot{=} M_1' \in A_1$ with $M_1' \dot{=} M_1''$ and $M_2 \dot{=} M_2'$ with $M_2' \dot{=} M_2''$.
+        The result follows directly.
+    \end{enumerate}
+    \item Case $A = \arrTy*{A_1}{A_2}$
+    \begin{enumerate}
+        \item We want to show $M' \dot{=} M \in A$, so assume $M_1' \dot{=} M_1 \in A_1$ and let $M \mapsto^* \lamEx*{x}{M_2}$ and $M' \mapsto^* \lamEx*{x}{M_2'}$.
+        By the inductive hypothesis, we have $M_1 \dot{=} M_1' \in A_1$. With this and the given $M \dot{=} M' \in A$,
+        we have $\Sub{M_1}{x}{M_2} \dot{=} \Sub{M_1'}{x}{M_2'} \in A_2$. Applying the inductive hypothesis on this equality completes the proof.
+        \item Using the P.E.R. trick, discussed below.
+    \end{enumerate}
+\end{enumerate}
+
+To complete the transitivity case for $A = \arrTy*{A_1}{A_2}$, suppose $M \dot{=} M' \dot{=} M'' \in A$ and we want to show $M \dot{=} M'' \in A$.
+We have $M \mapsto^* \lamEx*{x}{M_2}$, $M' \mapsto^* \lamEx*{x}{M_2'}$, and $M'' \mapsto^* \lamEx*{x}{M_2''}$. Suppose we have inputs $M_1 \dot{=} M_1'' \in A_1$.
+We must show $\Sub{M_1}{x}{M_2} \dot{=} \Sub{M_1''}{x}{M_2''} \in A_2$.
+
+The natural approach would be to input $M_1 \dot{=} M_1'' \in A_1$ into the equalities from $M \dot{=} M' \dot{=} M'' \in A$, obtaining
+$\Sub{M_1}{x}{M_2} \dot{=} \Sub{M_1''}{x}{M_2'} \in A_2$ and \\
+$\Sub{M_1}{x}{M_2'} \dot{=} \Sub{M_1''}{x}{M_2''} \in A_2$. However, when we go to apply
+transitivity on these, we find that the terms $\Sub{M_1''}{x}{M_2'}$ and $\Sub{M_1}{x}{M_2'}$ do not quite match.
+
+To remedy this, we require what we dub the ``P.E.R. trick.'' By symmetry, $M_1 \dot{=} M_1'' \in A_1$ implies $M_1'' \dot{=} M_1 \in A_1$.
+By transitivity, we obtain that $M_1 = M_1 \in A_1$. This is the trick; any element that is related to another in a P.E.R. is also related to itself.
+
+We then can apply $M_1 = M_1 \in A_1$ on $M \dot{=} M' \in A$ and $M_1 \dot{=} M_1'' \in A_1$ on $M' \dot{=} M'' \in A$ to obtain
+$\Sub{M_1}{x}{M_2} \dot{=} \Sub{M_1}{x}{M_2'} \in A_2$ and $\Sub{M_1}{x}{M_2'} \dot{=} \Sub{M_1''}{x}{M_2''} \in A_2$. The two sides match now,
+and transitivity from the inductive hypothesis completes the proof.
+\footnote{Analogously, we could have used the P.E.R. trick to find $M_1'' \dot{=} M_1'' \in A_1$ and applied it to $M' \dot{=} M'' \in A$.}
+The P.E.R. trick allows us to bridge the gap between these two equalities, placing the transition from $M_1$ to $M_1''$ entirely on one side.
+
+\end{proof}
+
+Reflexivity will hold if and only if a term is well-typed.
+
+\begin{theorem}[Reflexivity]
+    If $\Gamma \entails{\isOfTp{M}{A}}$ then $\Gamma \gg M \in A$, meaning $\Gamma \gg M \dot{=} M \in A$.
+\end{theorem}
+The proof of this was left as an exercise. It is necessary for this theorem to hold, otherwise the reflexivity inference rule for judgmental equality is unsound.
+
+\section{judgmental Equality}\label{sec:jeq}
+
+We define $\Gamma \entails{\isOfTp{M \equiv N}{A}}$ for closed terms $M$ and $N$ via inference rules.
+With the first set of rules, we axiomatically prescribe judgmental equality to be a P.E.R. with reflexivity
+for all well-typed terms.
+
+\begin{mathpar}
+
+\defrule[R][jeq:r]
+{\Gamma \entails{\isOfTp{M}{A}}}
+{ \Gamma \entails{\isOfTp{M \equiv M}{A}} }
+
+\defrule[S][jeq:s]
+{\Gamma \entails{\isOfTp{M \equiv N}{A}} }
+{ \Gamma \entails{\isOfTp{N \equiv M}{A}} }
+
+\defrule[T][jeq:t]
+{\Gamma \entails{\isOfTp{M \equiv N}{A}} \\ \Gamma \entails{\isOfTp{N \equiv P}{A}} }
+{ \Gamma \entails{\isOfTp{M \equiv P}{A}} }
+
+\end{mathpar}
+
+The second set of inference rules describe how to construct equivalent terms from equivalent subterms.
+
+\begin{mathpar}
+
+\defrule[Pair][jeq:pair]
+{\Gamma \entails{\isOfTp{M_1 \equiv N_1}{A_1}} \\ \Gamma \entails{\isOfTp{M_2 \equiv N_2}{A_2}}}
+{ \Gamma \entails{\isOfTp{\pairEx*{M_1}{M_2} \equiv \pairEx*{N_1}{N_2}}{\prodTy*{A_1}{A_2}}} }
+
+\defrule[Proj][jeq:proj]
+{\Gamma \entails{\isOfTp{M \equiv N}{\prodTy*{A_1}{A_2}}} }
+{ \Gamma \entails{\isOfTp{M \cdot i \equiv N \cdot i}{A_i}}}
+
+\defrule[Lam][jeq:lam]
+{\Gamma, \isOfTp{x}{A_1} \entails{\isOfTp{M \equiv N}{A_2}} }
+{ \Gamma \entails{\isOfTp{\lamEx*{x}{M} \equiv \lamEx*{x}{N}}{\arrTy*{A_1}{A_2}}}}
+
+\defrule[App][jeq:app]
+{\Gamma \entails{\isOfTp{M \equiv N}{\arrTy*{A_1}{A_2}}} \\ \Gamma \entails{\isOfTp{M_1 \equiv N_1}{A_1}} }
+{ \Gamma \entails{\isOfTp{\appEx*{M}{M_1} \equiv \appEx*{N}{N_1}}{A_2}}}
+
+\end{mathpar}
+
+And finally, the third set of rules concern $\beta$ and $\eta$ equality.
+
+\begin{mathpar}
+
+\defrule[$\eta_1$][jeq:eta1]
+{\Gamma \entails{\isOfTp{M}{\unitTy*}}}
+{\Gamma \entails{\isOfTp{M \equiv \unitEx*}{\unitTy*}}}
+
+\defrule[$\beta_\times$][jeq:betapair]
+{\Gamma \entails{\isOfTp{M_1}{A_1}} \\ \Gamma \entails{\isOfTp{M_2}{A_2}}}
+{\Gamma \entails{\isOfTp{\projEx*<i>{\pairEx*{M_1}{M_2}} \equiv M_i}{A_i}}}
+
+\defrule[$\eta_\times$][jeq:etapair]
+{\Gamma \entails{\isOfTp{M}{\prodTy*{A_1}{A_2}}}}
+{\Gamma \entails{\isOfTp{\pairEx*{\projEx*<1>{M}}{\projEx*<2>{M}} \equiv M}{\prodTy*{A_1}{A_2}}}}
+
+\defrule[$\beta_\to$][jeq:betaarr]
+{\Gamma, \isOfTp{x}{A_1} \entails{\isOfTp{M_2}{A_2}} \\ \Gamma \entails{\isOfTp{M_1}{A_1}}}
+{\Gamma \entails{\isOfTp{\appEx*{\lamEx*{x}{M_2}}{M_1} \equiv \Sub{M_1}{x}{M_2}}{A_2}}}
+
+\defrule[$\eta_\to$][jeq:etaarr]
+{\Gamma \entails{\isOfTp{M}{\arrTy*{A_1}{A_2}}}}
+{\Gamma \entails{\isOfTp{\lamEx*{x}{\appEx*{M}{x}} \equiv M}{\arrTy*{A_1}{A_2}}}}
+
+\end{mathpar}
+
+%\begin{theorem}[Soundness]
+%    If $\Gamma \entails{\isOfTp{M \equiv N}{A}}$ then $\Gamma \gg M \dot{=} N \in A$.
+%\end{theorem}
+
+%The proof of this theorem is assigned for homework. The proof should proceed by induction on derivations, and requires the use of reflexivity.
+%For the cases in the first batch of inference rules, we require the symmetry and transitivity of $\Gamma \gg M \dot{=} N \in A$, which uses the P.E.R. trick.
+%For the $\beta_{\arrTy*{}{}}$ case, we will need head expansion (Lemma \ref{lem:headexpansion}).
+
+We can now state the fundemental theorem for this logical relation.
+
+\begin{theorem}[FTLR]
+If $\Gamma \entails{\isOfTp{M \equiv N}{A}}$ then $\Gamma \gg M \dot{=} N \in A$.
+\end{theorem}
+\begin{proof}
+We go by induction on the derivation of $\Gamma \entails{\isOfTp{M \equiv N}{A}}$.
+\begin{enumerate}
+  \item For the first set of rules ($R$, $S$, and $T$) we make use of the reflexivity theorem as well as the lemma stating that exact equality is a P.E.R.
+  \item For the second set of rules (\textsc{Pair}, \textsc{Proj}, \textsc{Lam}, \textsc{App}), the claim follows fairly easily from the definition of exact quality after applying the induction hypothesis. Occasionally, head expansion is necessary.
+  \item For the third set of rules ($\eta_1$, $\beta_\times$, $\eta_\times$, $\beta_\to$, $\eta_\to$), we make use of the head expansion lemma and the reflexivity theorem.
+\end{enumerate}
+\end{proof}
+
+\begin{remark}[Zig-Zag Closure]
+
+Closed exact equality is zig-zag complete. That is, if $M \dot{=} M' \in A$, $N \dot{=} M' \in A$, and $N \dot{=} N' \in A$, then $M \dot{=} N' \in A$. This can be used instead of the P.E.R. trick to prove the FTLR. It will come up later in the course as a useful generalization of the P.E.R. trick that can handle settings where the types of the terms being judged equal are different.
+
+\end{remark}
+
+
+\section{More Types}
+
+In this section, we'll extend the notion of exact equality to more types, namely $0$, $+$, $\natTy*$, and $\conatTy*$.
+
+\begin{definition}[Exact Equality, Continued]
+    $$
+  \begin{array}{cll}
+      M \dot{=} M' \in 0 & \Iff & \text{never} \\
+      \\
+      M \dot{=} M' \in \sumTy*{A_1}{A_2} & \Iff & \text{for some } i \in \{1, 2\}, M \evalsTo \injEx*<i>{M_i} \text{ and } M' \evalsTo \injEx*<i>{M'_i} \\
+      & & \text{where $M_i \dot{=} M'_i$} \\
+      \\
+      M \dot{=} M' \in \natTy* & \Iff & \text{$\mathcal P(M, M')$, where $\mathcal P$ is the strongest relation} \\
+      & & \text{such that $\mathcal P(M, M')$ if either $M, M' \evalsTo \zeroEx*$} \\
+      & & \text{or $M \evalsTo \succEx*{N}$, $M' \evalsTo \succEx*{N'}$ with $\mathcal P(N, N')$} \\
+      \\
+      M \dot{=} M' \in \conatTy* & \Iff & \text{$\mathcal Q(M, M')$, where $\mathcal Q$ is the weakest relation} \\
+      & & \text{such that $\mathcal Q(M, M')$ if either $\outEx*{M}, \outEx*{M'} \evalsTo \injEx*<1>{\unitEx*}$} \\
+      & & \text{or $\outEx*{M} \evalsTo \injEx*<2>{N}$, $\outEx*{M'} \evalsTo \injEx*<2>{N'}$ with $\mathcal Q(N, N')$} \\
+  \end{array}
+  $$
+\end{definition}
+
+\end{document}
