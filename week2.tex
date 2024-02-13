@@ -6,8 +6,6 @@
 \usepackage{tikz}
 \usetikzlibrary{automata,positioning}
 
-\usepackage{todonotes}
-
 \newcommand{\gmhat}[1]{\ensuremath{\widehat{\gamma}(#1)}}
 
 \newcommand{\De}[0]{\Delta}
@@ -358,7 +356,6 @@ along with some compatibility rules:
   {\sndEx*{M} \whBetaReducesTo \sndEx*{M'}}
 
 \end{mathpar}
-\todo[line]{My notes also have the rule \textsc{app-arg} from below, but I assume that was a typo on my part.}
 \end{definition}
 
 \begin{definition}[$M \betaReducesTo M'$]
@@ -426,8 +423,7 @@ reflexive, transitive closure of $\whBetaReducesTo$ (resp.\ $\betaReducesTo$).
 
 \begin{definition}[$\beta$-normal form]
 We say that an open term $M$ is in \emph{$\beta$-normal form}, written
-$\betaNormal{M}$,\todo[line]{In class, Bob wrote both $M\ \textrm{norm}_\beta$ and
-$\textrm{norm}_\beta(M)$. Is there a difference?} if we cannot apply any
+$\betaNormal{M}$, if we cannot apply any
 more $\beta$-reductions to $M$.
 
 Similarly, we write $\whBetaNormal{M}$ to denote that no weak head
@@ -456,9 +452,7 @@ For contexts $\De, \De'$, we write $\De' \leq \De$ iff $\De \entails
 \end{definition}
 
 We can interpret contexts as \emph{worlds} (whence the ``Kripke'' in ``Kripke
-logical relations'').\todo[line]{I wasn't really able to follow this part, so I
-think there's a good chance I misuse terminology throughout whenever talking
-about worlds.} Specifically, if $\De' \leq \De$, then we will say that $\De'$
+logical relations''). Specifically, if $\De' \leq \De$, then we will say that $\De'$
 is in the \emph{future} relative to $\De$.
 
 When proving termination using Tait computability, we needed to define the
@@ -495,7 +489,7 @@ Some notes:
 Like with hereditary termination, we can think of $\HN{\De}{A}{M}$ as a type
 family that is doubly indexed, namely by a context and a type. (If we so
 desired, we could make the order of the indexing more apparent by staggering our
-sub–/superscripts like so: ${\mathsf{HN}^\De}_A(M)$.\todo{Is this the opposite order?})
+sub–/superscripts like so: ${\mathsf{HN}^\De}_A(M)$.)
 
 Proceeding as usual, we next want to show that $\HN{\De}{A}{M}$ is closed under
 head expansion:
@@ -591,15 +585,13 @@ $x$, then $\HN{\De}{A}{x}$.
 \end{lemma}
 \paragraph{Attempt.} We use induction on $A$:
 
-If $A = \unitTy*$ or $A = \ansTy*$\todo{$ansTy*$ isn't actually in my notes, I'm
-just assuming.}, then we want to show that $\betaNorm{x}$.
+If $A = \unitTy*$ or $A = \ansTy*$, then we want to show that $\betaNorm{x}$.
 This follows immediately from the definition of $\beta$-normal form, since we
 have no reductions that apply to a lone variable.
 
 If $A = \prodTy*{A_1}{A_2}$, then we want to show that
 $\HN{\De}{A_1}{\fstEx*{x}}$ and $\HN{\De}{A_2}{\sndEx*{x}}$. How do we
-proceed?\todo[line]{Or, is this case actually doable as-is? My notes weren't super
-clear here.}
+proceed?
 
 We also run into difficulty in the case where $A = \arrTy*{A_1}{A_2}$. We want
 to show that for any $\De' \leq \De$, $\HN{\De'}{A_1}{M_1}$ implies
@@ -613,9 +605,7 @@ $\pairEx*{M_1}{M_2}$, or $\lamEx*{x}{M}$, where $M$, $M_1$, and $M_2$ are
 arbitrary terms (i.e.\ they can be open).
 \end{definition}
 
-Canonical terms are head normal forms\todo[line]{This is what my notes say, but
-I don't think Bob explicitly defined ``head normal forms'' in class. Should
-this read ``weak head normal forms'' instead?} that are values.
+Canonical terms are head normal forms that are values.
 
 \begin{definition}[Neutral terms]
 We say that an open term $U$ is \emph{neutral} iff it satisfies the grammar:
@@ -675,15 +665,12 @@ If $A = \unitTy*$:
     $\betaNorm{M}$, so we are done.
 \end{enumerate}
 
-If $A = \ansTy*$, the argument is analogous to when $A = \unitTy*$.\todo{This
-  isn't actually in my notes, I'm just assuming.}
+If $A = \ansTy*$, the argument is analogous to when $A = \unitTy*$.
 
 If $A = \prodTy*{A_1}{A_2}$:
 \begin{enumerate}
   \item Suppose that $\NN{\De}{\prodTy*{A_1}{A_2}}{U}$, and thus
-    $\NN{\De}{A_1}{\fstEx*{U}}$ and $\NN{\De}{A_2}{\sndEx*{U}}$.\todo{My notes say
-    $\fstEx*{M}$ and $\sndEx*{M}$ instead of $\fstEx*{U}$ and $\sndEx*{U}$,
-    respectively, but I'm assuming this was a typo.} We want to show that
+    $\NN{\De}{A_1}{\fstEx*{U}}$ and $\NN{\De}{A_2}{\sndEx*{U}}$. We want to show that
     $\HN{\De}{\prodTy*{A_1}{A_2}}{U}$. Using part 1 of our inductive
     hypothesis, we obtain $\HN{\De}{A_1}{\fstEx*{U}}$ and
     $\HN{\De}{A_2}{\sndEx*{U}}$. By definition, then, we have
@@ -739,8 +726,7 @@ $\NN{\De, \isOfTp{x}{A}}{A}{x}$.
 $\HN{\De}{\sumTy*{A_1}{A_2}}{M}$ in terms of eliminators; however, because
 $\sumTy*{A_1}{A_2}$ is a positive type, its eliminator can have any type.
 Specifically, because this type could be bigger than $A_1$ and $A_2$, we cannot
-use induction on types like we are used to.)\todo{Did Bob say we'd come back to
-this at some point?}
+use induction on types like we are used to.)
 
 \subsection{Generalizing our techniques}
 
@@ -758,17 +744,15 @@ i.e.\ $\mathsf{HN}_A : \textrm{Ctx}^{\textsf{op}} \to \textrm{Set}$:
 \]
 and
 \begin{align*}
-\unitTy*^\De(M) &= ? \\
-\ansTy*^\De(M) &= ? \\
-\prodTy*{X_1}{X_2}^\De(M) &= ? \\
-\arrTy*{X_1}{X_2}^\De(M) &= \forall \De' \leq \De, \textrm{ if } X_1^{\De'}(M_1) \textrm{ then } X_2^{\De'}(M_2)
+\unitTy*^\De(M) &= \betaNorm{M} \\
+\ansTy*^\De(M) &= \betaNorm{M} \\
+(\prodTy*{X_1}{X_2})^\De(M) &= X_1^\De(M \cdot 1) \textrm{ and } X_2^\De(M \cdot 2) \\
+(\arrTy*{X_1}{X_2})^\De(M) &= \forall \De' \leq \De, \textrm{ if } X_1^{\De'}(M_1) \textrm{ then } X_2^{\De'}(M_2)
 \end{align*}
 We write $-^\De = \{ M \mid -^\De(M) \}$.
-\todo{My notes don't actually define $\unitTy*^\De$, $\ansTy*^\De$, or
-$(\prodTy*{X_1}{X_2})^\De$ explicitly, so I don't know what to say here.}
 
-In effect, $\textrm{Term}_A$\todo{My notes don't define this.} is a type theory,
-as we know. However, we can \emph{also} think of $\mathsf{HT}_A$ (resp.\
+In effect, the predicate $\textrm{Term}_A$ classifying all terms of type $A$ is a type theory, as we know.
+However, we can \emph{also} think of $\mathsf{HT}_A$ (resp.\
 $\mathsf{HN}_A$) as type theories, which have stronger invariants and thus nicer
 properties. Then, FTLR gives us a map from $\textrm{Term}_A$ into
 $\mathsf{HT}_A$ (resp.\ $\mathsf{HN}_A$). This is an example of \emph{functorial
