@@ -25,32 +25,31 @@ Note that $x$ refers to \textit{term variables}, whereas $X$ refers to \textit{t
 System F mostly copies the statics and dynamics from the STLC, with the addition of some extra rules for incorporating type variables. Those are replicated below:
 
 Static rules relating to quantifiers:
+\begin{mathpar}
+  \defrule[Lam][sta:lam]
+    {\Gamma \entails[\Delta, X]{\isOfTp{M}{A}}}
+    {\Gamma \entails[\Delta]{\isOfTp{\tlamEx*{X}{M}}{\allTy*{X}{M}}}}
 
-$$
-\defrule[Lam][sta:lam]
-  {\Gamma \entails[\Delta, X]{\isOfTp{M}{A}}}
-  {\Gamma \entails[\Delta]{\isOfTp{\tlamEx*{X}{M}}{\allTy*{X}{M}}}}
-$$
-
-$$
-\defrule[Lam-App][sta:app]
-  {\Gamma \entails[\Delta]{\isOfTp{M}{\allTy*{X}{A}}} \\
-   \Delta \entails{B \text{ type}}}
-  {\Gamma \entails[\Delta]{\isOfTp{\tapEx*{M}{B}}{\Sub{B}{X}{A}}}}
-$$
+    \defrule[Lam-App][sta:app]
+    {\Gamma \entails[\Delta]{\isOfTp{M}{\allTy*{X}{A}}} \\
+    \Delta \entails{B \text{ type}}}
+    {\Gamma \entails[\Delta]{\isOfTp{\tapEx*{M}{B}}{\Sub{B}{X}{A}}}}
+\end{mathpar}
 
 Dynamic rules relating to quantifiers:
-$$
-\defrule[Lam][dyn:lam]
-  {M \stepsTo M'}
-  {\tlamEx*{X}{M} \stepsTo{} \tlamEx*{X}{M'}}
-$$
+\begin{mathpar}
+  \defrule[Lam][dyn:lam]
+    {}
+    {\isVal{\tlamEx*{X}{M}}}
 
-$$
-\defrule[App-Lam][dyn:app]
-  {\strut}
-  {\tapEx*{\tlamEx*{X}{M}}{A} \stepsTo{} \Sub{A}{X}{M}}
-$$
+  \defrule[App-Step][dyn:app-step]
+    {M \stepsTo{} M'}
+    {\tapEx*{M}{A} \stepsTo{} \tapEx*{M'}{A}}
+
+  \defrule[App-Lam][dyn:app]
+    {\strut}
+    {\tapEx*{\tlamEx*{X}{M}}{A} \stepsTo{} \Sub{A}{X}{M}}
+\end{mathpar}
 
 \section{Extending Tait's Method to System F}
 
@@ -86,7 +85,7 @@ This definition, however, will not work because we are trying to define heredita
 
 There are two possible directions to go from here:
 \begin{enumerate}
-    \item \textit{\textbf{Predicative Quantification}}. If we distinguish ``small" from ``large" types, we could adapt System F so that the universal quantifier draws from a universe of ``small types" rather than a universe of all types. Critically, we say that quantifiers create ``large" types. Then, there is no issue of circularity because all types $b$ that we might substitute for $X$ are said to be \textit{prior} to $\allTy*{X}{A}$ (that is, they all exist before the introduction of the quantifier). So, the substitution $\Sub{b}{X}{A}$ makes the type ``smaller". 
+    \item \textit{\textbf{Predicative Quantification}}. If we distinguish ``small" from ``large" types, we could adapt System F so that the universal quantifier draws from a universe of ``small types" rather than a universe of all types. Critically, we say that quantifiers create ``large" types. Then, there is no issue of circularity because all types $b$ that we might substitute for $X$ are said to be \textit{prior} to $\allTy*{X}{A}$ (that is, they all exist before the introduction of the quantifier). So, the substitution $\Sub{b}{X}{A}$ makes the type ``smaller".
     \paragraph{Note.} This is what is implemented in ML with $`\alpha$
     \item \textit{\textbf{Impredicative Quantification}}. Rather counter-intuitively, we could expand quantification to include ``all possible types", not just the ones that you can write down with a type expression. In this approach, $\Sub{B}{X}{A}$ is in no way ``prior" to or ``smaller" than $\allTy*{X}{A}$.
 \end{enumerate}
@@ -103,7 +102,7 @@ Type candidates for type $B$ are sets of closed terms of type $B$ that are close
 This represents a candidate assignment, where every type variable $X$ in $\Delta$ is mapped to a candidate $\eta(X)$ for $\delta(X)$. Recall that since $\delta$ tells you what types to plug in for type variables, $\delta(X)$ is some type $B$, and so $\eta(X)$ is a type candidate for type $B$.
 \end{definition}
 
-We can now write down what it means for a term to be hereditarily terminating at type $A$ (where $A$ is parameterized by a context of type variables) relative to a candidate assignment: $\HT^{\Delta}(M)[\eta \subseteq \delta]$. 
+We can now write down what it means for a term to be hereditarily terminating at type $A$ (where $A$ is parameterized by a context of type variables) relative to a candidate assignment: $\HT^{\Delta}(M)[\eta \subseteq \delta]$.
 
 As usual, this is defined inductively on the structure of $A$.
 
@@ -168,12 +167,12 @@ We also need to redefine the notation $\Gamma \gg_\Delta M \in A$ to account for
     The proof is by induction on the derivation of $\Gamma \entails[\Delta]{\isOfTp{M}{A}}$. Here, we will consider only the cases involving type variables. The remaining cases should be standard.
     \begin{enumerate}
         \item [Rule \ruleref{sta:lam}] We can show this by instantiating type $B$ for $X$ in the premise of the rule.
-        
+
         \item [Rule \ruleref{sta:app}] The Induction Hypothesis gives $\Gamma \gg_\Delta M \in \allTy*{X}{A}$ which means that for some type variable substitutions $\delta$ and term variable substitution $\gamma$, $\widehat{\gamma} (\widehat{\delta}(M)) \in \HT[\allTy*{X}{A}]^\Delta$
 
         Using the definition of hereditary termination, consider type $B$ and candidate $\HT[B](-)$. Then we can apply compositionality to show the desired result.
     \end{enumerate}
-    
+
 \end{proof}
 
 \begin{corollary}
