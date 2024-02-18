@@ -1,0 +1,128 @@
+\documentclass{article}
+\usepackage{graphicx} % Required for inserting images
+
+\input{setup}
+\input{defns}
+
+\title{15-791 ATPL \\ Week 5 Notes}
+\author{Bradley Teo, Amanda Li}
+\date{\today}
+
+\newcommand{\HTg}[5]{\HT[#1]^{#2}(#3) \, [#4\subseteq #5]}
+\newcommand{\rsim}[6]{#1 \sim #2 \in #3 \, [#4 : #5 \leftrightarrow #6]}
+\newcommand{\exeq}[5]{#1 \gg_#2 #3 \doteq #4 \in #5}
+\newcommand{\exref}[4]{#1 \gg_#2 #3\in #4}
+\newcommand{\judgeq}[5]{#1 \entails[#2] \isOf{#3 \equiv #4}{#5}}
+\newcommand{\Ap}[1]{\texttt{Ap}(#1)}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+Last week, we studied the termination of closed terms in System F using Girard's method. System F introduces \emph{parametric polymorphism} to the Simply-Typed Lambda Calculus (STLC), and Tait's method falls short when dealing with universally quantified types, $\allTy*{X}{A}$ and their type variables $X$.
+
+To resolve this, we extend logical relations by parametrizing our notion of hereditary termination, $\HTg{A}{\Delta}{M}{\eta}{\delta}$, where $A$ can contain type variables $X$ tracked by $\Delta$ and $\eta$ contains candidate assignments. A candidate is a set of terms that is closed under head expansion.
+
+\begin{definition}[Hereditary Termination]
+\begin{align*}
+    \HTg{X}{\Delta}{M}{\eta}{\delta} &\text{ iff } \eta_X(M) \\
+    \HTg{\allTy*{X}{A}}{\Delta}{M}{\eta}{\delta} &\text{ iff } \text{for all closed types $B$ and candidates $\mathcal{C}$ for $B$,} \\
+    &\quad\quad M \longmapsto^* \tlamEx*{X}{N}, \\
+    &\quad\quad \HTg{A}{\Delta, X}{[B/X]N}{\eta[X\mapsto\mathcal{C}]}{\delta[X\mapsto B]}
+\end{align*}
+\end{definition}
+This formulation also isolates the instance where we invoke the power set assumption, during the quantification over candidates $\mathcal{C}$ of $B$.
+
+\begin{lemma}
+    $\HTg{A}{\Delta}{-}{\eta}{\delta}$ is a candidate.
+\end{lemma}
+
+\begin{lemma}[Compositionality]
+    \[\HTg{[B/X]A}{\Delta}{-}{\eta}{\delta} \text{ iff } \HTg{A}{\Delta}{-}{\eta[X\mapsto \HTg{B}{\Delta}{-}{\eta}{\delta}]}{\delta[X\mapsto B]}\] 
+\end{lemma}
+\begin{proof}
+    Induction over the structure of $A$.
+\end{proof}
+
+\section{Reynolds's Method}
+Reynolds studied the representational independence of abstract data types. Clients of ADTs are \emph{polymorphic} over their implementation, and we want to be able to express that \emph{``equal'' implementations induce ``equal'' behavior}. The key insight in Reynolds's method is to generalize Girard's method to \emph{binary correspondence relations}. Our new predicate becomes $\rsim{M}{M'}{X}{\eta}{\delta}{\delta'}$. Note that $\eta(X)$ may define a \emph{heterogeneous} relation between terms of different types.
+
+\begin{definition}[Similarity]
+    \begin{align*}
+        \rsim{M}{M'}{X}{\eta}{\delta}{\delta'} &\text{ iff } \eta(X)(M, M') \\
+        \rsim{M}{M'}{\ansTy}{\eta}{\delta}{\delta'} &\text{ iff } M, M'\stepsTo(\ast) \yesEx \text{ or } M, M'\stepsTo(\ast) \noEx \\
+        \rsim{M}{M'}{\arrTy*{A_1}{A_2}}{\eta}{\delta}{\delta'} &\text{ iff } \begin{cases}
+            M \stepsTo(\ast) \lamEx*{x}{M_2}, M' \stepsTo(\ast) \lamEx*{x}{M_2'}, \\
+            \rsim{M_1}{M_1'}{A_1}{\eta}{\delta}{\delta'} \text{ implies } \\ 
+            \quad\rsim{[M_1/x]M_2}{[M_1'/x]M_2'}{A_2}{\eta}{\delta}{\delta'}
+        \end{cases} \\
+        \rsim{M}{M'}{\allTy*{X}{A}}{\eta}{\delta}{\delta'} &\text{ iff } \begin{cases}
+            M\stepsTo({\ast}) \tlamEx*{\_}{N}, M' \stepsTo({\ast}) \tlamEx*{\_}{N'} \\
+            \text{for all $B$, $B'$ and for all $R:B\leftrightarrow B'$}, \\
+            \quad\rsim{N}{N'}{A}{\eta[X\mapsto R]}{\delta[X\mapsto B]}{\delta[X\mapsto B']}
+        \end{cases}
+    \end{align*}
+\end{definition}
+
+The properties of head expansion and compositionality are extended from Girard's to encompass binary relations. Head expansion for similarity directly follows from the definitions as candidates are closed under head expansion.
+
+\begin{definition}[Compositionality]
+$\rsim{M}{M'}{[B/X]A}{\eta}{\delta}{\delta'}$ iff $\rsim{M}{M'}{A}{\eta[X\mapsto \rsim{\_}{\_}{B}{\eta}{\delta}{\delta'}]}{\delta[X \mapsto \hat{\delta}(B)]}{\delta'[X \mapsto \hat{\delta'}(B)]}$
+\end{definition}
+
+Equipped with a notion of similarity, we can define \emph{exact equality} and use it to express the parametricity theorem.
+\begin{definition}[Exact Equality]
+    $\exeq{\Gamma}{\Delta}{M}{M'}{A}$ if for all substitutions $\isOf{\delta, \delta'}{\Delta}$, for all candidate assignments $\isOf{\eta}{\delta\leftrightarrow\delta'}$, and for all $\rsim{\gamma}{\gamma'}{\Gamma}{\eta}{\delta}{\delta'}$, \[\rsim{\hat{\gamma}M}{\hat{\gamma}'M'}{A}{\eta}{\delta}{\delta'}.\]
+\end{definition}
+
+We write $\exref{\Gamma}{\Delta}{M}{A}$ to mean $\exeq{\Gamma}{\Delta}{M}{M}{A}$.
+\begin{theorem}[Parametricity]
+If $\Gamma\entails[\Delta]\isOf{M}{A}$, then $\exref{\Gamma}{\Delta}{M}{A}$.
+\end{theorem}
+\begin{proof}
+    Prove by induction on typing.
+
+\begin{mathpar}
+\defrule[$\forall$-I][rey:forall_intro]
+  {\Gamma \entails{\isOfTp{M}{A}}}
+  {\Gamma \entails{\isOfTp{\Lambda(M)}{\allTy*{X}{A}}}}
+
+\defrule[$\forall$-E][rey:forall_elim]
+  {\Gamma \entails{\isOfTp{M}{\allTy*{X}{A}}} \\ 
+   \Gamma \entails{\isTp{B}}
+  }
+  { \Gamma \entails{\isOfTp{\texttt{Ap}(M)}{[B/X]A} }}
+
+\end{mathpar}
+We illustrate two cases for $\allTy*{X}{A}$. Fix $\delta, \delta', \eta: \delta \leftrightarrow \delta', \rsim{\gamma}{\gamma'}{\Gamma}{\eta}{\delta}{\delta'}$.
+\begin{description}
+  \item[\ruleref{rey:forall_intro}]
+    Suppose $R: B \leftrightarrow B'$ where $\isTp{B, B'}$. Then it suffices to show that $\rsim{\hat{\gamma}(M)}{\hat{\gamma'}(M)}{A}{\eta[X \mapsto R]}{\delta[X \mapsto B]}{\delta'[X \mapsto B']}$.
+    By the induction hypothesis, $\rsim{\Lambda(\hat{\gamma}(M))}{\Lambda(\hat{\gamma'}(M))}{\allTy*{X}{A}}{\eta}{\delta}{\delta'}$.
+  \item[\ruleref{rey:forall_elim}]
+  By compositionality, it suffices to show that $\rsim{\Ap{\hat{\gamma}(M)}}{\Ap{\hat{\gamma'}(M))}}{A}{\eta[X \mapsto \rsim{\_}{\_}{B}{\eta}{\delta}{\delta'}]}{\delta[X \mapsto \hat{B}]}{\delta'[X \mapsto \hat{B'}]}$ instead.
+
+  By the induction hypothesis, we know that $\rsim{\hat{\gamma}(M)}{\hat{\gamma'}(M)}{\allTy*{X}{A}}{\eta}{\delta}{\delta'}$. Thus, it follows that $\hat{\gamma}(M) \mapsto^* \Lambda(N), \hat{\gamma'}(M) \mapsto^* \Lambda(N')$ for some $N, N'$. We also know that $\rsim{N}{N'}{A}{\eta[X \mapsto R]}{\delta[X \mapsto B]}{\delta'[X \mapsto B']}$. The result follows by head expansion.
+\end{description}
+\end{proof}
+
+\begin{definition}[Definitional Equality]
+    Same as the original formulation, but with $\beta$ and $\eta$ rules for universally quantified types: \begin{mathpar}
+        \inferrule*[lab=$\beta$-$\forall$]{\Gamma\entails[\Delta, X] \isOf{M}{A} \\ \Delta\entails\isTp{B}}{\Gamma\entails[\Delta]\isOf{\texttt{Ap}(\Lambda(M))\equiv M}{[B/X]A}}
+
+        \inferrule*[lab=$\eta$-$\forall$]{\Gamma\entails[\Delta] \isOf{M}{\allTy*{X}{A}}}{\Gamma\entails[\Delta]\isOf{M\equiv\Lambda(\texttt{Ap}(M))}{\allTy*{X}{A}}}
+    \end{mathpar}
+\end{definition}
+
+\begin{theorem}[Fundamental Theorem]
+    If $\judgeq{\Gamma}{\Delta}{M}{N}{A}$, then $\exeq{\Gamma}{\Delta}{M}{N}{A}$.
+\end{theorem}
+\begin{proof}
+    By induction on derivation.
+\end{proof}
+
+We could have instead taken a \emph{presupposition-based approach} to expressing the Fundamental Theorem; in which case, we would have if $\judgeq{\Gamma}{\Delta}{M}{N}{A}$, then $\exref{\Gamma}{\Delta}{M}{A}$ and $\exref{\Gamma}{\Delta}{N}{A}$ \emph{imply} $\exeq{\Gamma}{\Delta}{M}{N}{A}$.
+\end{document}
+
