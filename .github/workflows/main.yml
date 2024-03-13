@@ -1,0 +1,34 @@
+name: build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * MON'
+
+jobs:
+  test-builds:
+
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    timeout-minutes: 10
+
+    steps:
+
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'true'
+
+      - name: Install TeX Live
+        run: sudo apt-get update && sudo apt-get install latexmk texlive-latex-extra texlive-science texlive-fonts-extra
+
+      - name: Test writeup builds
+        run: latexmk -pdf week*.tex
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: handout
+          path: week*.pdf
+          if-no-files-found: error
+          retention-days: 7
