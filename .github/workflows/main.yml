@@ -3,12 +3,9 @@ name: build
 on:
   push:
   pull_request:
-  workflow_dispatch:
-  schedule:
-    - cron: '0 0 * * MON'
 
 jobs:
-  test-builds:
+  build-notes:
 
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
@@ -28,7 +25,7 @@ jobs:
 
       - uses: actions/upload-artifact@v3
         with:
-          name: handout
+          name: atpl24-notes
           path: week*.pdf
           if-no-files-found: error
           retention-days: 7
