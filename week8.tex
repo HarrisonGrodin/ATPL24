@@ -18,4 +18,15 @@
 \newunicodechar{∃}{\ensuremath{\mathnormal\exists}}
 \newunicodechar{Γ}{\ensuremath{\mathnormal\Gamma}}
 
-\section{Motivation}
+\section{Introduction}
+Last week we introduced the lax framework of computation type.
+This week, we introduce another approach to stratify value types and computation types,
+called \emph{call-by-push-value} (CBPV), or polarization.
+
+Instead of introducing a type former for computation types,
+we maintain the distinction between type structures instead.
+We consider positive types \emph{values types}, which we denote as $A^+$,
+and negative types \emph{computation types}, which we denote as $A^-$.
+Similar to adjoint logic, we link these two families of types with an adjunction.
+
+The syntax of types in CBPV is given by the following grammar:
