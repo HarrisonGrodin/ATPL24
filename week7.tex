@@ -20,7 +20,7 @@
 \NewDocumentCommand{\evalsToC}{m}{\Downarrow^{#1}}
 \NewDocumentCommand{\entailsPhase}{m}{\entails^{#1}}
 \NewDocumentCommand{\exEquivPhase}{m m m m m}{#1 \entailsPhase{#2} #3 \equiv #4 : #5}
-\NewDocumentCommand{\compEquivPhase}{m m m m m}{#1 \entailsPhase{#2} #3 \equiv #4 \altDiv #5}
+\NewDocumentCommand{\compEquivPhase}{m m m m m}{#1 \entailsPhase{#2} #3 \equiv #4 \wavydiv #5}
 \NewDocumentCommand{\stepEx}{m m}{\kw{step}^{#1} (#2)}
 \NewDocumentCommand{\stepsToC}{m}{\stackrel{\makebox[0pt]{\mbox{#1}}}{\stepsTo}}
 
@@ -126,7 +126,7 @@ Similar analogies exist in other parts of language design -- for example, in a m
 
 \subsection{Grammar}
 
-We will formulate this system in the lax type setting, where we have terms ($\Gamma \entails \isOf{M}{A}$) and computations ($\Gamma \entails E \altDiv A$).
+We will formulate this system in the lax type setting, where we have terms ($\Gamma \entails \isOf{M}{A}$) and computations ($\Gamma \entails \retsTp{E}{A}$).
 
 \[
     \begin{array}{rcl}
@@ -150,8 +150,8 @@ There are a few things to note about the grammar:
 With the new computation construct, we have a new static rule:
 \begin{mathpar}
     \defrule[T-Step][sta:step]
-    {c \in \monC \\ \Gamma \entails E \altDiv A}
-    {\Gamma \entails \stepEx{c}{E} \altDiv A}
+    {c \in \monC \\ \Gamma \entails \retsTp{E}{A}}
+    {\Gamma \entails \retsTp{\stepEx{c}{E}}{A}}
 \end{mathpar}
 
 The judgment $c \in \monC$ means that $c$ is an element of the cost monoid $\monC$.
@@ -253,13 +253,13 @@ We also have head expansion for terms:
     If $\exEqOfPhase{M}{M'}{A}{\phi}$ and $N \stepsTo M$, then $\exEqOfPhase{N}{M'}{A}{\phi}$, and if $N \stepsTo M'$, then $\exEqOfPhase{M}{N}{A}{\phi}$
 \end{lemma}
 
-Finally, we introduce new entailment judgments $\Gamma \entailsPhase{\phi} \isOf{M}{A}$ and $\Gamma \entailsPhase{\phi} E \altDiv A$ to represent entailment under a particular phase $\phi$.
+Finally, we introduce new entailment judgments $\Gamma \entailsPhase{\phi} \isOf{M}{A}$ and $\Gamma \entailsPhase{\phi} \retsTp{E}{A}$ to represent entailment under a particular phase $\phi$.
 We also introduce the judgment $\Gamma \gg^\phi \exEqOf{M}{M'}{A}$ (and analogously for computations), which means ``If $\exEqOfPhase{\gamma}{\gamma'}{\Gamma}{\phi}$, then $\exEqOfPhase{\gyat(M)}{\gyat'(M')}{A}{\phi}$.''
 With these, we can define the reflexivity lemmas:
 \begin{lemma}\label{lem:refl}\phantom{nextline}
     \begin{enumerate}
         \item If $\Gamma \entailsPhase{\phi} \isOf{M}{A}$, then $\Gamma \gg^\phi \exEqOf{M}{M}{A}$
-        \item If $\Gamma \entailsPhase{\phi} E \altDiv A$, then $\Gamma \gg^\phi \compEqOf{E}{E}{A}$
+        \item If $\Gamma \entailsPhase{\phi} \retsTp{E}{A}$, then $\Gamma \gg^\phi \compEqOf{E}{E}{A}$
     \end{enumerate}
 \end{lemma}
 
@@ -272,19 +272,19 @@ Since the execution steps of $\kw{ret}$ and $\kw{bind}$ do not incur cost, any e
 We do, however, have new equational rules for $\kw{step}$ computations:
 \begin{mathpar}
     \defrule[Step-Zero][step-zero]
-    {\Gamma \entailsPhase{\phi} E \altDiv A}
+    {\Gamma \entailsPhase{\phi} \retsTp{E}{A}}
     {\compEquivPhase{\Gamma}{\phi}{\stepEx{0}{E}}{E}{A}}
 
     \defrule[Step-Step][step-step]
-    {\Gamma \entailsPhase{\phi} E \altDiv A}
+    {\Gamma \entailsPhase{\phi} \retsTp{E}{A}}
     {\compEquivPhase{\Gamma}{\phi}{\stepEx{c}{\stepEx{c'}{E}}}{\stepEx{c+c'}{E}}{A}}
 
     \defrule[Step-Ext][step-ext]
-    {\Gamma \entailsPhase{\EXT} E \altDiv A}
+    {\Gamma \entailsPhase{\EXT} \retsTp{E}{A}}
     {\compEquivPhase{\Gamma}{\EXT}{\stepEx{c}{E}}{E}{A}}  \\
 
     \defrule[Step-Bind][step-bind]
-    {\Gamma \entailsPhase{\phi} E_1 \altDiv A_1 \\ \Gamma, \isOf{x}{A_1} \entailsPhase{\phi} E_2 \altDiv A_2}
+    {\Gamma \entailsPhase{\phi} \retsTp{E_1}{A_1} \\ \Gamma, \isOf{x}{A_1} \entailsPhase{\phi} \retsTp{E_2}{A_2}}
     {\compEquivPhase{\Gamma}{\phi}{\bndEx*{\compEx{\stepEx{c}{E_1}}}{x}{E_2}}{\stepEx{c}{\bndEx*{\compEx{E_1}}{x}{E_2}}}{A_2}}
 \end{mathpar}
 
@@ -292,7 +292,7 @@ We might consider adding the following rule similar to the last one:
 
 \begin{mathpar}
     \defrule[Step-Bind?][step-bind2]
-    {\Gamma \entailsPhase{\phi} E_1 \altDiv A_1 \\ \Gamma, \isOf{x}{A_1} \entailsPhase{\phi} E_2 \altDiv A_2}
+    {\Gamma \entailsPhase{\phi} \retsTp{E_1}{A_1} \\ \Gamma, \isOf{x}{A_1} \entailsPhase{\phi} \retsTp{E_2}{A_2}}
     {\compEquivPhase{\Gamma}{\phi}{\bndEx*{\compEx{E_1}}{x}{\stepEx{c}{E_2}}}{\stepEx{c}{\bndEx*{\compEx{E_1}}{x}{E_2}}}{A_2}}
 \end{mathpar}
 
@@ -312,7 +312,7 @@ To prove the theorem(s), we proceed by induction on the equivalence judgment. We
 \begin{proof}\phantom{nextline}\\\\
     Fix $\exEqOfPhase{\gamma}{\gamma'}{\Gamma}{\phi}$.
     We would like to show that\\ $\compEqOfPhase{\bndEx*{\compEx{\stepEx{c}{\gyat(E_1)}}}{x}{\gyat(E_2)}}{\stepEx{c}{\bndEx*{\compEx{\gyat'(E_1)}}{x}{\gyat'(E_2)}}}{A_2}{\phi}$.\\\\
-    From the first premise, we have that $\Gamma \entailsPhase{\phi} E_1 \altDiv A_1$. By \Cref{lem:refl},
+    From the first premise, we have that $\Gamma \entailsPhase{\phi} \retsTp{E_1}{A_1}$. By \Cref{lem:refl},
     we have $\compEqOfPhase{\gyat(E_1)}{\gyat'(E_1)}{A_1}{\phi}$. By definition, this means that $\gyat(E_1) \evalsToC{c_1} V_1$, $\gyat'(E_1) \evalsToC{c_1'} V_1'$ such that $\exEqOfPhase{V_1}{V_1'}{A_1}{\phi}$
     and either $c_1 = c_1'$ or $\phi \entails \EXT$.\\\\
     Consider the following stepping for both computations:
@@ -328,7 +328,7 @@ To prove the theorem(s), we proceed by induction on the equivalence judgment. We
     \end{align*}
     In other words, we have $\bndEx*{\compEx{\stepEx{c}{\gyat(E_1)}}}{x}{\gyat(E_2)} \evalsToC{c+c_1} \Sub{V_1}{x}{\gyat(E_2)}$ and $\stepEx{c}{\bndEx*{\compEx{\gyat'(E_1)}}{x}{\gyat'(E_2)}} \evalsToC{c+c_1'} \Sub{V_1'}{x}{\gyat'(E_2)}$.
 
-    From the second premise, we have $\Gamma, \isOf{x}{A_1} \entailsPhase{\phi} E_2 \altDiv A_2$. By \Cref{lem:refl}, we would have $\compEqOfPhase{\gyat^*(E_2)}{\gyat'^*(E_2)}{A_2}{\phi}$ for $\exEqOfPhase{\gamma^*}{\gamma'^*}{\Gamma, \isOf{x}{A_1}}{\phi}$.
+    From the second premise, we have $\Gamma, \isOf{x}{A_1} \entailsPhase{\phi} \retsTp{E_2}{A_2}$. By \Cref{lem:refl}, we would have $\compEqOfPhase{\gyat^*(E_2)}{\gyat'^*(E_2)}{A_2}{\phi}$ for $\exEqOfPhase{\gamma^*}{\gamma'^*}{\Gamma, \isOf{x}{A_1}}{\phi}$.
     Note that since $\exEqOfPhase{V_1}{V_1'}{A_1}{\phi}$ and $\exEqOfPhase{\gamma}{\gamma'}{\Gamma}{\phi}$, we have that $\compEqOfPhase{\gamma[x \mapsto V_1]}{\gamma'[x \mapsto V_1']}{\Gamma, \isOf{x}{A_1}}{\phi}$.  As such, by the result of reflexivity, we have
     $\compEqOfPhase{\widehat{\gamma[x \mapsto V_1]}(E_2)}{\widehat{\gamma'[x \mapsto V_1']}(E_2)}{A_2}{\phi}$, i.e. $\compEqOfPhase{\Sub{V_1}{x}{\gyat(E_2)}}{\Sub{V_1'}{x}{\gyat'(E_2)}}{A_2}{\phi}$ by definition of substitution.\\\\
     Since $\compEqOfPhase{\Sub{V_1}{x}{\gyat(E_2)}}{\Sub{V_1'}{x}{\gyat'(E_2)}}{A_2}{\phi}$, by definition, $\Sub{V_1}{x}{\gyat(E_2)} \evalsToC{c_2} V_2$, $\Sub{V_1'}{x}{\gyat'(E_2)} \evalsToC{c_2'} V_2'$, and either $c_2 = c_2'$ or $\phi \entails \EXT$.
