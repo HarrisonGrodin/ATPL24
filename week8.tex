@@ -31,4 +31,36 @@ Similar to adjoint logic, we link these two families of types with an adjunction
 
 The syntax of types in CBPV is given by the following grammar:
 
+\section{IO Effects}
+We can represent various effects using CBPV as the framework. Here, we represent simple IO with printing to standard out and reading from standard in.
+
+
+\subsection{Statics}
+Assume we have some type $\kw{string}$. We add the following typing rules to CBPV:
+
+\begin{mathpar}
+  \defrule[T-Print][sta:print]
+  {\Gamma \entails{\isOfTp{s}{\kw{string}}}}
+  {\Gamma \entails{\isOfTp{\kw{print}(s)}{\freeTy{\topTy}}}}
+
+  \defrule[T-Read][sta:read]
+  {\strut}
+  {\Gamma \entails{\isOfTp{\kw{read}}{\freeTy{\kw{string}}}}}
+\end{mathpar}
+
+\subsection{Dynamics}
+
+For values, we use the typical evaluation semantics where $V \evalsTo[] V_0$ for some fully evaluated value $V_0$.
+
+For computations, we describe a configuration/state transition system based on process calculus. 
+
+\subsection{Equations}
+
+\section{Mutable State}
+
+\subsection{Grammar}
+\subsection{Statics}
+\subsection{Dynamics}
+\subsection{Equations}
+
 \end{document}
