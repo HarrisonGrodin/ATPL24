@@ -52,7 +52,37 @@ Assume we have some type $\kw{string}$. We add the following typing rules to CBP
 
 For values, we use the typical evaluation semantics where $V \evalsTo[] V_0$ for some fully evaluated value $V_0$.
 
-For computations, we describe a configuration/state transition system based on process calculus. 
+For computations, we describe a configuration/state transition system based on a simplified process calculus. 
+
+We have three processes $\cal I$, $\cal O$, and $C$ running in parallel composition, written as 
+${\cal I} \parallel {\cal O} \parallel C$. $\cal I$ and $\cal O$ are the input and output processes, respectively, and are represented as lists of \kw{string}s. $C$ is the current running computation.
+
+We also have two channels \kw{stdin} and \kw{stdout} which carry data of type \kw{string}.
+
+\subsubsection{Transitions}
+\todo{Needed to use \kw{s} in the step actions instead since $s$ shows up as $\int$ for some reason}
+\begin{mathpar}
+  \defrule[D-Input][dyn:input]
+    {\strut}
+    {\consEx*{s}{\cal I} \stepsTo<\sndAc*{\kw{stdin}}{\kw{s}}> {\cal I}}
+
+  \defrule[D-Output][dyn:output]
+    {\strut}
+    {{\cal O} \stepsTo<\rcvAc*{\kw{stdout}}{\kw{s}}> \consEx*{s}{\cal O}} 
+
+  \defrule[D-Print][dyn:print]
+    {\strut}
+    {\kw{print}(s) \stepsTo<\sndAc*{\kw{stdout}}{\kw{s}}> {\retEx*{\unitEx*}}}
+
+  \defrule[D-Read][dyn:read]
+    {\strut}
+    {\kw{read} \stepsTo<\rcvAc*{\kw{stdin}}{\kw{s}}> {\retEx*{s}}}
+
+  \defrule[D-Par][dyn:par]
+    {S_1 \stepsTo<\alpha> S_1' \\
+     S_2 \stepsTo<\overline{\alpha}> S_2'}
+    {S_1 \parallel S_2 \stepsTo S_1' \parallel S_2'} 
+\end{mathpar}
 
 \subsection{Equations}
 
