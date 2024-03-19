@@ -1,0 +1,234 @@
+\documentclass[letterpaper]{article}
+\usepackage{geometry}[margin=1in]
+
+
+\input{setup}
+\input{defns}
+
+\NewDocumentCommand{\HTe}{O{A}}{\widetilde{\mathsf{HT}}_{#1}}
+\NewDocumentCommand{\HTk}{O{A}}{\overline{\mathsf{HT}}_{#1}}
+\newcommand{\exref}[3]{#1 \gg #2\in #3}
+\newcommand{\exrefe}[3]{#1 \gg #2\ \tilde{\in}\ #3}
+\newcommand{\exrefk}[2]{#1\ \overline{\in}\ #2}
+
+\title{15-791 ATPL \\ Week 6 Notes}
+\author{Mihir Khare and Asher Kornfeld}
+\date{\today}
+\begin{document}
+\maketitle
+
+\section{Introduction}
+
+Previously, we have studied how Tait's method can be used to prove termination of the simply-typed $\lambda$-calculus (STLC), as well as how to apply the argument to various extensions of the STLC.
+Most recently, we studied how Tait's method was insufficient for the extension of the STLC with parametric polymorphism, and explored how Girard's method can help us instead.
+
+
+Here, we formalize an extension of the STLC with a lax formulation of control effects (where the execution of a program transfers control to another part of the program).
+We specify the language using stack machine dynamics, and allow the program state to be made explicit in the program with first-class continuations.
+We also distinguish pure expressions from impure computations (that potentially have a control effect), and connect the two forms with the \textit{lax modality}.
+Finally, we extend Tait's method to prove termination of this extended STLC.
+
+\section{Specification}
+
+\subsection{Syntax}
+
+We first define the syntax for the SLTC extended with continuations and lax modal separation:
+
+$$
+  A \coloncolonequals \ansTy* \mid \unitTy \mid \prodTy*{A_1}{A_2} \mid \arrTy*{A_1}{A_2} \mid \contTy{A} \mid \compTy{A}
+$$
+$$
+  M \coloncolonequals x \mid \yesEx \mid \noEx \mid \unitEx* \mid \pairEx*{M_1}{M_2} \mid \projEx*<1>{M} \mid \projEx*<2>{M} \mid \lamEx*{x}{M} \mid \appEx*{M_1}{M_2} \mid \contEx*{K} \mid \compEx{E}
+$$
+$$
+  E \coloncolonequals \retEx*{M} \mid \bndEx*{M}{x}{E} \mid \letccEx*{x}{E} \mid \throwEx*{M_1}{M_2}
+$$
+$$
+  K \coloncolonequals \empStk* \mid \extStk*{K}{x\ .\ E}
+$$
+
+Here, $A$ represents types.
+The new extensions are $\contTy{A}$ (continuations that refute type $A$) and $\compTy{A}$ (computations of type $A$).
+
+$M$ represents pure expressions mostly as usual.
+The new extensions are $\contEx{K}$ (reifying a stack into a value) and $\compEx{E}$ (representing a suspended computation as a value).
+
+$E$ represents impure computation expressions.
+It includes methods for creating computations from values (through $\retEx*{M}$), and also for evaluating computation suspensions and binding into a scope (through $\bndEx*{M}{x}{E}$).
+It also provides primitives for grabbing the current stack as a value (through $\letccEx*{x}{E}$), and throwing values to a stack (through $\throwEx*{M_1}{M_2}$).
+
+Finally, $K$ represents control flow stacks.
+They can either be the final (empty) stack ($\empStk*$), which accepts a value of type $\ansTy$, or a composition of "frames" that accepts some other type ($\extStk*{K}{x\ .\ E}$).
+
+\subsection{Statics}
+
+Aside from the typical pure expression typing judgement, we introduce 2 new typing judgements: $\Gamma \entails{\retsTp{E}{A}}$ for computation expressions, and $\accsTp{K}{A}$ for stacks.
+These judgements have the following additional statics rules:
+
+\begin{mathpar}
+  \defrule[Lax-I][sta:comp]
+    {\Gamma \entails{\retsTp{E}{A}}}
+    {\Gamma \entails{\isOfTp{\compEx{E}}{\compTy{A}}}}
+
+  \defrule[Ret][sta:ret]
+    {\Gamma \entails{\isOfTp{M}{A}}}
+    {\Gamma \entails{\retsTp{\retEx*{M}}{A}}}
+
+  \defrule[Lax-E][sta:bnd]
+    {\Gamma \entails{\isOfTp{M}{\compTy{A}}} \\
+     \Gamma, \isOfTp{x}{A} \entails{\retsTp{E}{B}}}
+    {\Gamma \entails{\retsTp{\bndEx*{M}{x}{E}}{B}}}
+    
+  \defrule[Cont-I][sta:letcc]
+    {\Gamma, \isOfTp{x}{\contTy{A}} \entails{\retsTp{E}{A}}}
+    {\Gamma \entails{\retsTp{\letccEx*{x}{E}}{A}}}
+
+  \defrule[Cont-E][sta:throw]
+    {\Gamma \entails{\isOfTp{M_1}{\contTy{A}}} \\
+     \Gamma \entails{\isOfTp{M_2}{A}}}
+    {\Gamma \entails{\retsTp{\throwEx*{M_1}{M_2}}{B}}}
+
+  \defrule[Emp][sta:emp]
+    {}
+    {\Gamma \entails{\accsTp{\empStk*}{\ansTy}}}
+
+  \defrule[Frame][sta:frame]
+    {\isOfTp{x}{A} \entails{\retsTp{E}{B}} \\
+    \accsTp{K}{B}}
+    {\accsTp{\extStk*{K}{x\ .\ E}}{A}}
+
+  \defrule[Frame][sta:ret]
+    {\accsTp{K}{A}}
+    {\Gamma \entails{\isOfTp{\contEx*{K}}{\contTy{A}}}}
+\end{mathpar}
+
+\subsection{Dynamics}
+
+The dynamics for much of the language is as we would expect; here, we present some of the new judgements and semantics.
+Specifically, with control flow stacks, we have the judgements $K \vartriangleright E$ (computation $E$ is evaluated under context $K$) and $K \vartriangleleft V$ (value $V$ is returned to stack $K$).
+These judgements have additional statics rules as follows:
+
+\begin{mathpar}
+  \defrule[Eval-OK][sta:eval]
+    {\accsTp{K}{A} \\
+     \retsTp{E}{A}}
+    {\okSt{K \vartriangleright E}}
+
+  \defrule[Value-OK][sta:value]
+    {\accsTp{K}{A} \\
+     \isOfTp{V}{A}}
+    {\okSt{K \vartriangleleft V}}
+\end{mathpar}
+
+Note that when evaluating an expression in a given context, we cannot have any free variables in that expression.
+We further introduce the judgements $\isVal{M}$ stating that a pure expression is a value, $\iniSt{K \vartriangleright E}$ stating that this context and impure computation are the initial program state, and $\finSt{K \vartriangleleft V}$ stating that this context and value are the final program state.
+We also have the notion of pure expression evaluation $M \Downarrow V$, which is the same as $M \stepsTo^* V$.
+We can now define the interesting dynamics rules:
+
+\begin{mathpar}
+  \defrule[Cont-Val][dyn:cont]
+    {}
+    {\isVal{\contEx*{K}}}
+
+  \defrule[Comp-Val][dyn:comp]
+    {}
+    {\isVal{\compEx{E}}}
+
+  \defrule[Ret][dyn:ret]
+    {M \Downarrow V}
+    {K \vartriangleright \retEx*{M} \stepsTo K \vartriangleleft V}
+
+  \defrule[Bnd][dyn:bind]
+    {M \Downarrow \compEx{E}}
+    {K \vartriangleright \bndEx*{M}{x}{E'} \stepsTo \extStk*{K}{x\ .\ E'} \vartriangleright E}
+
+  \defrule[Throw][dyn:throw]
+    {M_1 \Downarrow \contEx{K_1}}
+    {K \vartriangleright \throwEx*{M_1}{M_2} \stepsTo K_1 \vartriangleright \retEx{M_2}}
+
+  \defrule[Letcc][dyn:letcc]
+    {}
+    {K \vartriangleright \letccEx*{x}{E} \stepsTo K \vartriangleright \Sub{\contEx*{K}}{x}{E}}
+
+  \defrule[Init][dyn:init]
+    {}
+    {\iniSt{\empStk* \vartriangleright E}}
+
+  \defrule[Final][dyn:final]
+    {\isVal{V}}
+    {\finSt{\empStk* \vartriangleleft V}}
+
+  \defrule[Shrink][dyn:shrink]
+    {\isVal{V}}
+    {\extStk*{K}{x\ .\ E} \vartriangleleft V \stepsTo K \vartriangleright \Sub{V}{x}{E}}
+\end{mathpar}
+
+\section{Linking to Classical Logic}
+
+The addition of continuations and computations to the STLC allow us to represent classical logic constructively, using "effectful proofs" as our representation.
+Specifically, we can treat a pure expression $\isOfTp{M}{A}$ as being a "direct proof" of predicate $A$, and an impure expression $\retsTp{E}{A}$ as being an "indirect proof" of type $A$.
+This lets us derive the logical correspondences of $\isOfTp{M}{A} \Leftrightarrow A\ \trueEx$ for pure expressions, $\retsTp{E}{A} \Leftrightarrow A\ \nonfalseEx$ for impure computations, and $\accsTp{K}{A} \Leftrightarrow A\ \falseEx$ for continuations.
+Therefore, our variable contexts can be treated as a set of predicates we know are true (along with proofs of them).
+We also take the translation of continuation types as $\contTy{A} \Leftrightarrow \neg A$.
+
+\section{Termination}
+
+In order to show that all programs of this extended STLC terminate (and relatedly, show that we can't prove any arbitrary proposition with a non-terminating program), we again turn to Tait's method.
+We define the following notions of hereditary termination:
+\begin{itemize}
+  \item For pure expressions, $\HT[A](M)$ denotes hereditary termination of $M$ of type $A$
+  \item For impure computations, $\HTe[A](M)$ denotes hereditary termination of $E$ returning type $A$
+  \item For continuations, $\HTk[A](K)$ denotes hereditary termination of $K$ accepting type $A$
+\end{itemize}
+
+Their definitions at each type are given as follows:
+
+\begin{itemize}
+  \item $\HT[\ansTy](M)$ iff $M \Downarrow \yesEx$ or $M \Downarrow \noEx$
+  \item $\HT[\unitTy](M)$ iff $M \Downarrow \unitEx*$
+  \item $\HT[\prodTy*{A_1}{A_2}](M)$ iff $M \Downarrow \pairEx*{M_1}{M_2}$ where $\HT[A_1](M_1)$ and $\HT[A_2](M_2)$
+  \item $\HT[\arrTy*{A_1}{A_2}](M)$ iff $M \Downarrow \lamEx*{x}{M_2}$ and if $\HT[A_1](M_1)$, then $\HT[A_2](\Sub{M_1}{x}{M_2})$
+  \item $\HT[\contTy{A}](M)$ iff $M \Downarrow \contEx*{K}$ where $\HTk[A](K)$
+  \item $\HT[\compTy{A}](M)$ iff $M \Downarrow \compEx{E}$ where $\HTe[A](E)$
+  \item $\HTk[A](K)$ iff $\HT[A](V)$ implies $K \vartriangleleft V \Downarrow$
+  \item $\HTe[A](E)$ iff $\HTk[A](K)$ implies $K \vartriangleright E \Downarrow$
+\end{itemize}
+
+The termination judgements for pure expressions are straightforward; for expressions of base types, they must evaluate to the base values, and for expressions of higher types, they must evaluate to "well-behaved" values of that type.
+For continuation and computation termination, we have a slightly more interesting formulation.
+Termination on stacks is defined in terms of eliminations; stacks are well-behaved if and only if upon returning any well-behaved value to it, evaluation will eventually terminate.
+And termination on impure computations is defined in terms of introductions; they are well-behaved if and only if evaluating them in any well-behaved context will eventually terminate.
+This flows fairly naturally from how computations and stacks work intuitively; stacks are only useful if you can return values to them, and computations are only useful if you can evaluate them in some context.
+
+We also define the judgements $\exref{\Gamma}{M}{A}$ to mean that if $\HT[\Gamma](\gamma)$ then $\HT[A](\hat{\gamma}(M))$, $\exrefe{\Gamma}{E}{A}$ to mean that if $\HT[\Gamma](\gamma)$ then $\HTe[A](\hat{\gamma}(E))$, and finally $\exrefk{K}{A}$ to mean that $\HTk[A](K)$.
+Note that the continuation judgement does not involve a context.
+Finally, we present the relevant lemmas and the fundamental theorem:
+
+\begin{lemma}[Head Expansion]
+  If $\HT[A](M)$ and $M' \stepsTo M$, then $\HT[A](M')$.
+\end{lemma}
+
+\begin{lemma}[Expression Termination]
+  If $\HT[A](M)$, then $M \Downarrow$.
+\end{lemma}
+
+\begin{theorem}[Fundamental Theorem]
+  All language constructs are computable at their respective type:
+  \begin{itemize}
+    \item If $\Gamma \entails{\isOfTp{M}{A}}$, then $\exref{\Gamma}{M}{A}$.
+    \item If $\Gamma \entails{\retsTp{E}{A}}$, then $\exrefe{\Gamma}{E}{A}$.
+    \item If $\accsTp{K}{A}$, then $\exrefk{K}{A}$.
+  \end{itemize}
+\end{theorem}
+
+This is proved by induction on the typing judgements.
+A particular corollary of the fundamental theorem is that if we have some closed computation $\empCtx \entails{\retsTp{E}{\ansTy}}$, then $\empStk* \vartriangleright E$ will terminate.
+In other words, any well-typed initial-state program is guaranteed to terminate!
+
+\section{Equational Laws}
+
+We also have an extensive notion of reduction/equational laws that apply to the extended STLC.
+These rely on our semantic understanding of how the control stack changes within structures like $\bndEx*{M}{x}{E}$ and $\letccEx*{x}{E}$ to define equivalences with different structures.
+As before, we also define a notion of exact equality to prove that these rules are correct.
+
+\end{document}
