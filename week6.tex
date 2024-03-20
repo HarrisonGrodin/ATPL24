@@ -5,7 +5,7 @@
 \input{setup}
 \input{defns}
 
-\NewDocumentCommand{\nonfalseEx}{s}{\A@bt{\O@pn{nonfalse}}}
+\NewDocumentCommand{\nonfalseEx}{s}{\Abt{\Opn{nonfalse}}}
 \NewDocumentCommand{\HTe}{O{A}}{\widetilde{\mathsf{HT}}_{#1}}
 \NewDocumentCommand{\HTk}{O{A}}{\overline{\mathsf{HT}}_{#1}}
 \newcommand{\exref}[3]{#1 \gg #2\in #3}
@@ -79,7 +79,7 @@ These judgements have the following additional statics rules:
     {\Gamma \entails{\isOfTp{M}{\compTy{A}}} \\
      \Gamma, \isOfTp{x}{A} \entails{\retsTp{E}{B}}}
     {\Gamma \entails{\retsTp{\bndEx*{M}{x}{E}}{B}}}
-    
+
   \defrule[Cont-I][sta:letcc]
     {\Gamma, \isOfTp{x}{\contTy{A}} \entails{\retsTp{E}{A}}}
     {\Gamma \entails{\retsTp{\letccEx*{x}{E}}{A}}}
