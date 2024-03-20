@@ -4,9 +4,6 @@
 \input{defns}
 
 \usepackage{newunicodechar}
-\newunicodechar{λ}{\ensuremath{\mathnormal\lambda}}
-\newunicodechar{→}{\ensuremath{\mathrel\to}}
-\newunicodechar{⊢}{\ensuremath{\mathrel\vdash}}
 \newunicodechar{∀}{\ensuremath{\mathnormal\forall}}
 \newunicodechar{∃}{\ensuremath{\mathnormal\exists}}
 \newunicodechar{Γ}{\ensuremath{\mathnormal\Gamma}}
@@ -30,5 +27,12 @@ and negative types \emph{computation types}, which we denote as $A^-$.
 Similar to adjoint logic, we link these two families of types with an adjunction.
 
 The syntax of types in CBPV is given by the following grammar:
+
+\[
+    \begin{array}{rcl}
+        \text{Computation types} \quad & X ::= & \prodTy*{X_1}{X_2} \mid \parrTy*{A_1}{X_2} \mid F(A) \\
+        \text{Value types} \quad       & A ::= & \topTy* \mid \tensorTy*{A_1}{A_2} \mid \sumTy*{A_1}{A_2} \mid U(X) \\
+    \end{array}
+\]
 
 \end{document}
