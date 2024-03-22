@@ -15,16 +15,18 @@
 \begin{document}
 \maketitle
 
-\section{Introduction}
+\section{Call-by-Push-Value (CBPV)}
 Last week we introduced the lax framework of computation type.
 This week, we introduce another approach to stratify value types and computation types,
-called \emph{call-by-push-value} (CBPV), or polarization.
+called \emph{call-by-push-value} (CBPV), or \emph{polarization}.
 
 Instead of introducing a type former for computation types,
 we maintain the distinction between type structures instead.
-We consider positive types \emph{values types}, which we denote as $A^+$,
-and negative types \emph{computation types}, which we denote as $A^-$.
-Similar to adjoint logic, we link these two families of types with an adjunction.
+We consider positive types \emph{values types}, which we denote as $A$,
+and negative types \emph{computation types}, which we denote as $X$.
+The polarity here is related to the polarity of the corresponding connectives in linear logic.
+Similar to adjoint logic, we link these two families of types with an adjunction,
+where the computation fragment is similar to the linear fragment in adjoint logic.
 
 The syntax of types in CBPV is given by the following grammar:
 
@@ -34,5 +36,16 @@ The syntax of types in CBPV is given by the following grammar:
         \text{Value types} \quad       & A ::= & \topTy* \mid \tensorTy*{A_1}{A_2} \mid \sumTy*{A_1}{A_2} \mid U(X) \\
     \end{array}
 \]
+
+For simplicity, we introduce the function type only as a computation type,
+and for products, we introduce both versions, corresponding to the nature of the product that
+it can be used positively or negatively.
+
+\subsection{Statics}
+
+The static semantics of CBPV is defined by the following judgment given by the following typing rules:
+
+\begin{mathpar}
+\end{mathpar}
 
 \end{document}
