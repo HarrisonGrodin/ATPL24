@@ -2,6 +2,9 @@
 
 \input{setup}
 \input{defns}
+\RequirePackage{fourier}
+\RequirePackage{cochineal}
+\RequirePackage{lettrine}
 
 \usepackage{newunicodechar}
 \newunicodechar{∀}{\ensuremath{\mathnormal\forall}}
@@ -31,21 +34,71 @@ where the computation fragment is similar to the linear fragment in adjoint logi
 The syntax of types in CBPV is given by the following grammar:
 
 \[
-    \begin{array}{rcl}
-        \text{Computation types} \quad & X ::= & \prodTy*{X_1}{X_2} \mid \parrTy*{A_1}{X_2} \mid F(A) \\
-        \text{Value types} \quad       & A ::= & \topTy* \mid \tensorTy*{A_1}{A_2} \mid \sumTy*{A_1}{A_2} \mid U(X) \\
-    \end{array}
+  \begin{array}{rcl}
+    \text{Computation types} \quad & X ::= & \prodTy*{X_1}{X_2} \mid \parrTy*{A_1}{X_2} \mid \freeTy*{A} \\
+    \text{Value types} \quad       & A ::= & \topTy* \mid \tensorTy*{A_1}{A_2} \mid \sumTy*{A_1}{A_2} \mid \thunkTy*{X} \\
+  \end{array}
 \]
 
 For simplicity, we introduce the function type only as a computation type,
 and for products, we introduce both versions, corresponding to the nature of the product that
 it can be used positively or negatively.
 
+The syntax for terms is given by the following grammar:
+
+\[
+  \begin{array}{rcl}
+    \text{Values} \quad M, V ::=
+      && x \mid \unitEx* \mid \tensorEx*{M_1}{M_2} \mid \injEx*<1>{M} \mid \injEx*<2>{M} \mid \suspEx*{C} \\
+    \text{Computations} \quad C ::=
+      && \retEx*{M} \mid \bndEx*{C_1}{x}{C_2} \mid \pairEx*{C_1}{C_2} \mid \projEx*<1>{C} \mid \projEx*<2>{C} \mid \\
+      && \lamEx*{x}{C} \mid \appEx*{C}{M} \mid \forceEx*{M} \mid \checkEx*{M}{C} \mid \\
+      && \splitEx*{M}{x_1}{x_2}{C} \mid \caseEx* M x C
+  \end{array}
+\]
+
+We tend to use $V$ to indicate that a value is, a value, as opposed to some potential extensions of the syntax
+where there can be reducible expressions that are not directly values, which we will use $M$.
+The syntax above does not allow non-values in the syntax category of values, but we want to work with
+an eye on the future.
+
 \subsection{Statics}
 
-The static semantics of CBPV is defined by the following judgment given by the following typing rules:
+The static semantics of CBPV is defined by the following judgment scheme:
+
+\begin{align*}
+  &Γ \entails{\isOfTp M A} && \quad \text{Value typing} \\
+  &Γ \entails{\isOfTp C X} && \quad \text{Computation typing}
+\end{align*}
+
+The rules for values are given by the following typing rules:
 
 \begin{mathpar}
+  \defrule[Id][sta:id]
+    { \strut }
+    { Γ, x:A \entails{\isOfTp x A} }
+
+  \defrule[Unit-I][sta:unit-i]
+    { \strut }
+    { Γ \entails{\isOfTp{\unitEx*}{\topTy*}} }
+
+  \defrule[Tensor-I][sta:tensor-i]
+    { Γ \entails{\isOfTp {M_1} {A_1}} \\ Γ \entails{\isOfTp {M_2} {A_2}} }
+    { Γ \entails{\isOfTp{\tensorEx*{M_1}{M_2}}{\tensorTy*{A_1}{A_2}}} }
+
+  \defrule[Sum-I1][sta:sum-i1]
+    { Γ \entails{\isOfTp M {A_1}} }
+    { Γ \entails{\isOfTp{\injEx*<1>{M}}{\sumTy*{A_1}{A_2}}} }
+
+  \defrule[Sum-I2][sta:sum-i2]
+    { Γ \entails{\isOfTp M {A_2}} }
+    { Γ \entails{\isOfTp{\injEx*<2>{M}}{\sumTy*{A_1}{A_2}}} }
+
+  \defrule[Thunk-I][sta:thunk-i]
+    { Γ \entails{\isOfTp C X} }
+    { Γ \entails{\isOfTp{\suspEx*{C}}{\thunkTy*{X}}} }
 \end{mathpar}
+
+The rules for computations are given by the following typing rules:
 
 \end{document}
