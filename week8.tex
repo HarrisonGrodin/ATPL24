@@ -49,10 +49,20 @@ The static semantics of CBPV is defined by the following judgment given by the f
 \end{mathpar}
 
 \section{I/O Effects}
-We can represent various effects using CBPV as the framework. Here, we represent simple I/O with printing to standard out and reading from standard in.
+We can represent various effects using CBPV as the framework. Here, we represent simple I/O effects.
+
+\subsection{Grammar}
+We introduce a new base type $\kw{string}$. We also introduce two new commands, $\kw{print}$ and $\kw{read}$, which respectively print a string to standard out and read a string from standard in.
+
+\[
+    \begin{array}{rl} 
+        A ::= & \cdots \mid \kw{string} \\
+        C ::= & \cdots \mid \kw{print}(V) \mid \kw{read}  \\
+    \end{array}
+    \]
 
 \subsection{Statics}
-Assume we have some type $\kw{string}$. We add the following typing rules to CBPV:
+We add the following typing rules for the new commands. Assume that \kw{string} has some sensible typing rules.
 
 \begin{mathpar}
   \defrule[T-Print][sta:print]
@@ -139,7 +149,11 @@ We have the following equations:
   {\Gamma \entails{\fletEx*{\left( \fletEx*{\kw{read}}{s}{C_1} \right)}{x}{C_2} \equiv \fletEx*{\kw{read}}{s}{\fletEx*{C_1}{x}{C_2}}} : X_2}
 
 \end{mathpar}
+Note that rules \ruleref{eq:print-fun} and \ruleref{eq:read-fun} say that performing I/O before a function definition is equivalent to performing I/O within the function definition. This might be surprising, since one could imagine that the RHS would not be guaranteed to perform the I/O if the function is not applied. However, we will soon see how to justify this through exact equality.
 
+\subsection{Exact Equality}
+
+\todo{This definition changed...}
 
 \section{Mutable State}
 
