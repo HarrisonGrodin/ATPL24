@@ -68,7 +68,7 @@ Assume we have some type $\kw{string}$. We add the following typing rules to CBP
 
 For values, we use the typical evaluation semantics where $V \evalsTo[] V_0$ for some fully evaluated value $V_0$.
 
-For computations, we describe a configuration/state transition system based on a simplified process calculus. We have three processes $\cal I$, $\cal O$, and $C$ running in parallel composition, written as 
+For computations, we describe a configuration/state transition system based on a simplified process calculus. We have three processes $\cal I$, $\cal O$, and $C$ running in parallel composition, written as
 ${\cal I} \parallel {\cal O} \parallel C$. $\cal I$ and $\cal O$ are the input and output processes, respectively, and are represented as lists of \kw{string}s. $C$ is the current running computation.
 
 Note that configurations are unique up to structural congruence, so the processes can be freely reordered/nested/etc. as necessary for rules to apply (e.g.  ${\cal I} \parallel {\cal O} \parallel C \equiv {\cal I} \parallel C \parallel {\cal O} \equiv {\cal I} \parallel \left( {\cal O} \parallel C \right)$ ).
@@ -80,30 +80,30 @@ We present a subset of the state transitions:
 \todo{Needed to use \kw{s} in the step actions instead since $s$ shows up as $\int$ for some reason}
 \begin{mathpar}
   \defrule[D-Input][dyn:input]
-    {\strut}
-    {\consEx*{s}{\cal I} \stepsTo<\sndAc*{\kw{stdin}}{\kw{s}}> {\cal I}}
+  {\strut}
+  {\consEx*{s}{\cal I} \stepsTo<\sndAc*{\kw{stdin}}{\kw{s}}> {\cal I}}
 
   \defrule[D-Output][dyn:output]
-    {\strut}
-    {{\cal O} \stepsTo<\rcvAc*{\kw{stdout}}{\kw{s}}> \consEx*{s}{\cal O}} 
+  {\strut}
+  {{\cal O} \stepsTo<\rcvAc*{\kw{stdout}}{\kw{s}}> \consEx*{s}{\cal O}}
 
   \defrule[D-Print][dyn:print]
-    {\strut}
-    {\kw{print}(s) \stepsTo<\sndAc*{\kw{stdout}}{\kw{s}}> {\retEx*{\unitEx*}}}
+  {\strut}
+  {\kw{print}(s) \stepsTo<\sndAc*{\kw{stdout}}{\kw{s}}> {\retEx*{\unitEx*}}}
 
   \defrule[D-Read][dyn:read]
-    {\strut}
-    {\kw{read} \stepsTo<\rcvAc*{\kw{stdin}}{\kw{s}}> {\retEx*{s}}}
-    
+  {\strut}
+  {\kw{read} \stepsTo<\rcvAc*{\kw{stdin}}{\kw{s}}> {\retEx*{s}}}
+
   \defrule[D-Single][dyn:single]
-    {S_1 \stepsTo<\alpha> S_1'}
-    {S_1 \parallel S_2 \stepsTo<\alpha> S_1' \parallel S_2} 
+  {S_1 \stepsTo<\alpha> S_1'}
+  {S_1 \parallel S_2 \stepsTo<\alpha> S_1' \parallel S_2}
 
   \defrule[D-Par][dyn:par]
-    {S_1 \stepsTo<\alpha> S_1' \\
-     S_2 \stepsTo<\overline{\alpha}> S_2'}
-    {S_1 \parallel S_2 \stepsTo S_1' \parallel S_2'} 
-  
+  {S_1 \stepsTo<\alpha> S_1' \\
+    S_2 \stepsTo<\overline{\alpha}> S_2'}
+  {S_1 \parallel S_2 \stepsTo S_1' \parallel S_2'}
+
 \end{mathpar}
 Note that rule \ruleref{dyn:par} relies on the definition of $\overline{\alpha}$ representing the complementary action of $\alpha$. In this case, $\sndAc*{a}{s}$, the action to send $s$ over channel $a$, and $\rcvAc*{a}{s}$, the action to receive $s$ over channel $a$, are complementary to each other.
 
@@ -111,7 +111,35 @@ The dynamics for I/O are relatively straightforward. If ${\cal I}$ is not empty 
 
 \ruleref{dyn:single} allows the program to take steps not pertaining to I/O according to the base CBPV dynamics. In this case $\alpha$ would be $\epsilon$, the silent action.
 
+\todo{Not sure how much of this to mention/is this extraneous detail? \ruleref{dyn:single} wasn't in the lecture, but I felt it was necessary to mention to show that the rest of the program can still run without needing to send messages}
+Note that this rule also allows for asynchronous sends since a process could perform an action $\sndAc*{a}{s}$ without a complementary receive. This is not an issue since we can view channels as a message queue, so any asynchronous send just adds its message to the queue. Reads must still by synchronous since there must be a value available on the queue to use in the rest of the program.
+
 \subsection{Equations}
+We have the following equations:
+\begin{mathpar}
+
+  \defrule[E-Print-Fun][eq:print-fun]
+  {\Gamma \entails{\isOfTp{s}{\kw{string}}} \\
+    \Gamma, \isOfTp{x}{A} \entails{\isOfTp{C}{X}}}
+  {\Gamma \entails{\seqCmd*{\kw{print}(s)}{\lamEx*{x}{C} \equiv \lamEx*{x}{\seqCmd*{\kw{print}(s)}{C}}}} : \parrTy*{A}{X}}
+
+  \defrule[E-Read-Fun][eq:read-fun]
+  { \Gamma, \isOfTp{s}{\kw{string}}, \isOfTp{x}{A} \entails{\isOfTp{C}{X}}}
+  {\Gamma \entails{\fletEx*{\kw{read}}{s}{\lamEx*{x}{C} \equiv \lamEx*{x}{\fletEx*{\kw{read}}{s}{C}}}} : \parrTy*{A}{X}}
+
+  \defrule[E-Print-Bind][eq:print-bind]
+  {\Gamma \entails{\isOfTp{s}{\kw{string}}} \\
+   \Gamma \entails{\isOfTp{C_1}{\freeTy{A_1}}} \\
+   \Gamma, \isOfTp{x}{A_1} \entails{\isOfTp{C_2}{X_2}}}
+  {\Gamma \entails{\fletEx*{\left( \seqCmd*{\kw{print}(s)}{C_1} \right)}{x}{C_2} \equiv \seqCmd*{\kw{print}(s)}{\fletEx*{C_1}{x}{C_2}}} : X_2}
+
+  \defrule[E-Read-Bind][eq:print-bind]
+  {\Gamma, \isOfTp{s}{\kw{string}} \entails{\isOfTp{C_1}{\freeTy{A_1}}} \\
+   \Gamma, \isOfTp{x}{A_1} \entails{\isOfTp{C_2}{X_2}}}
+  {\Gamma \entails{\fletEx*{\left( \fletEx*{\kw{read}}{s}{C_1} \right)}{x}{C_2} \equiv \fletEx*{\kw{read}}{s}{\fletEx*{C_1}{x}{C_2}}} : X_2}
+
+\end{mathpar}
+
 
 \section{Mutable State}
 
