@@ -8,6 +8,9 @@
 \newunicodechar{∃}{\ensuremath{\mathnormal\exists}}
 \newunicodechar{Γ}{\ensuremath{\mathnormal\Gamma}}
 
+\NewDocumentCommand{\memState}{m m}{\left\{ #1 \parallel #2 \right\}}
+\NewDocumentCommand{\mapsVal}{m m}{#1 \hookrightarrow #2}
+
 \title{15-791 ATPL \\ Week 8 Notes}
 \author{Tesla Zhang, Jason Yao}
 \date{\today}
@@ -59,7 +62,7 @@ We introduce a new base type $\kw{string}$. We also introduce two new commands, 
         A ::= & \cdots \mid \kw{string} \\
         C ::= & \cdots \mid \kw{print}(V) \mid \kw{read}  \\
     \end{array}
-    \]
+\]
 
 \subsection{Statics}
 We add the following typing rules for the new commands. Assume that \kw{string} has some sensible typing rules.
@@ -76,7 +79,7 @@ We add the following typing rules for the new commands. Assume that \kw{string} 
 
 \subsection{Dynamics}
 
-For values, we use the typical evaluation semantics where $V \evalsTo[] V_0$ for some fully evaluated value $V_0$.
+For values, we use the typical evaluation semantics where $V \evalsTo V_0$ for some fully evaluated value $V_0$.
 
 For computations, we describe a configuration/state transition system based on a simplified process calculus. We have three processes $\cal I$, $\cal O$, and $C$ running in parallel composition, written as
 ${\cal I} \parallel {\cal O} \parallel C$. $\cal I$ and $\cal O$ are the input and output processes, respectively, and are represented as lists of \kw{string}s. $C$ is the current running computation.
@@ -156,10 +159,63 @@ Note that rules \ruleref{eq:print-fun} and \ruleref{eq:read-fun} say that perfor
 \todo{This definition changed...}
 
 \section{Mutable State}
+We can also consider store effects using CBPV. Here, we represent mutable state with a set of predefined assignables.
 
 \subsection{Grammar}
+We add two new commands, \kw{get} and \kw{set}, which respectively read and write to memory.
+\[
+    \begin{array}{rl} 
+        C ::= & \cdots \mid \getCmd<a> \mid \setCmd<a>{V}
+    \end{array}
+\]
+Here, $a$ is an assignable, which is essentially a unique identifier for a memory location.
+
 \subsection{Statics}
+We introduce a new context $\Sigma$ for assignables that maps assignables to their types. Since we are only considering a predefined set of assignables, $\Sigma$ is fxed.
+\[
+  \Sigma = \hasTp{a_1}{A_1}, \ldots,\, \hasTp{a_n}{A_n}
+\]
+Note that each type $A_i$ must be \emph{ground}. A ground type is essentially any value type $A$ \emph{except} $\thunkTy{X}$. We will see why this is necessary next week.
+
+We add the following typing rules for the new commands:
+\begin{mathpar}
+  \defrule[T-Get][sta:get]
+  {\Sigma \entails{\hasTp{a}{A}} \\
+   \left( A\, {\sf ground} \right)}
+  {\Gamma \entails[\Sigma]{\isOfTp{\getCmd<a>}{\freeTy{A}}}}
+
+  \defrule[T-Set][sta:set]
+  {\Sigma \entails{\hasTp{a}{A}} \\
+   \left( A\, {\sf ground} \right) \\
+    \Gamma \entails[\Sigma]{\isOfTp{V}{A}}}
+  {\Gamma \entails[\Sigma]{\isOfTp{\setCmd<a>{V}}{\freeTy{A}}}}
+\end{mathpar}
+Note that $\setCmd<a>{V}$ returns the value $V$ that was written to memory, instead of just $\unitEx*$.
+
 \subsection{Dynamics}
+For values, we again use the typical evaluation semantics where $V \evalsTo[\Sigma] V_0$ for some fully evaluated value $V_0$.
+
+For computations, we have a state transition system where states $\memState{\mu}{C}$ consist of a memory $\mu$ and the current running computation $C$.
+
+$\mu$ is composed of cells mapping assignables to values:
+\[
+  \mu = \mapsVal{a_1}{V_1} \parallel \cdots \parallel \mapsVal{a_n}{V_n}
+\]
+For each cell $1 \le i \le n$, we have $\Sigma \entails{\hasTp{a_i}{A_i}}$ and $\Sigma \entails[\varepsilon]{\isOfTp{V_i}{A_i}}$. Note that the empty assignable context $\varepsilon$ is used to indicate $V_i$ cannot reference any memory.
+
+\subsubsection{Transitions}
+We present a subset of the state transitions:
+
+\begin{mathpar}
+  \defrule[D-Get][dyn:get]
+  {\strut}
+  {\memState{\mu \parallel \mapsVal{a}{V}}{\getCmd<a>} \stepsTo \memState{\mu \parallel \mapsVal{a}{V}}{\retEx*{V}}}
+
+  \defrule[D-Set][dyn:set]
+  {V \evalsTo[\Sigma] V_0}
+  {\memState{\mu \parallel \mapsVal{a}{\_}}{\setCmd<a>{V}} \stepsTo \memState{\mu \parallel \mapsVal{a}{V_0}}{\retEx*{V_0}}}
+\end{mathpar}
+
 \subsection{Equations}
 
 \end{document}
