@@ -88,17 +88,70 @@ The rules for values are given by the following typing rules:
 
   \defrule[Sum-I1][sta:sum-i1]
     { Γ \entails{\isOfTp M {A_1}} }
-    { Γ \entails{\isOfTp{\injEx*<1>{M}}{\sumTy*{A_1}{A_2}}} }
+    { Γ \entails{\isOfTp{\injEx*<1> M}{\sumTy*{A_1}{A_2}}} }
 
   \defrule[Sum-I2][sta:sum-i2]
     { Γ \entails{\isOfTp M {A_2}} }
-    { Γ \entails{\isOfTp{\injEx*<2>{M}}{\sumTy*{A_1}{A_2}}} }
+    { Γ \entails{\isOfTp{\injEx*<2> M}{\sumTy*{A_1}{A_2}}} }
 
   \defrule[Thunk-I][sta:thunk-i]
     { Γ \entails{\isOfTp C X} }
-    { Γ \entails{\isOfTp{\suspEx*{C}}{\thunkTy*{X}}} }
+    { Γ \entails{\isOfTp{\suspEx* C}{\thunkTy* X}} }
 \end{mathpar}
 
 The rules for computations are given by the following typing rules:
+
+\begin{mathpar}
+  \defrule[Thunk-E][sta:thunk-e]
+    { Γ \entails{\isOfTp M {\thunkTy* X}} }
+    { Γ \entails{\isOfTp{\forceEx* M}{X}} }
+
+  \defrule[Free-I][sta:free-i]
+    { Γ \entails{\isOfTp M A} }
+    { Γ \entails{\isOfTp{\retEx* M}{\freeTy* A}} }
+
+  \defrule[Free-E][sta:free-e]
+    { Γ \entails{\isOfTp {C_1} {\freeTy*{A_1}}} \\
+      Γ, x:A_1 \entails{\isOfTp {C_2}{X_2}} }
+    { Γ \entails{\isOfTp{\bndEx*{C_1}{x}{C_2}}{X_2}} }
+
+  \defrule[Prod-I][sta:prod-i]
+    { Γ \entails{\isOfTp {C_1} {X_1}} \\
+      Γ \entails{\isOfTp {C_2} {X_2}} }
+    { Γ \entails{\isOfTp{\pairEx*{C_1}{C_2}}{\prodTy*{X_1}{X_2}}} }
+
+  \defrule[Prod-E1][sta:prod-e1]
+    { Γ \entails{\isOfTp C {\prodTy*{X_1}{X_2}}} }
+    { Γ \entails{\isOfTp{\projEx*<1> C}{X_1}} }
+
+  \defrule[Prod-E2][sta:prod-e2]
+    { Γ \entails{\isOfTp C {\prodTy*{X_1}{X_2}}} }
+    { Γ \entails{\isOfTp{\projEx*<2> C}{X_2}} }
+
+  \defrule[Parr-I][sta:parr-i]
+    { Γ, x:A \entails{\isOfTp C X} }
+    { Γ \entails{\isOfTp{\lamEx* x C}{\parrTy* A X}} }
+
+  \defrule[Parr-E][sta:parr-e]
+    { Γ \entails{\isOfTp C {\parrTy* A X}} \\
+      Γ \entails{\isOfTp M A} }
+    { Γ \entails{\isOfTp{\appEx* C M}{X}} }
+
+  \defrule[Unit-E][sta:unit-e]
+    { Γ \entails{\isOfTp M \topTy*} \\
+      Γ \entails{\isOfTp C X} }
+    { Γ \entails{\isOfTp{\checkEx* M C}{X}} }
+
+  \defrule[Tensor-E][sta:tensor-e]
+    { Γ \entails{\isOfTp M {\tensorTy*{A_1}{A_2}}} \\
+      Γ, x_1:A_1, x_2:A_2 \entails{\isOfTp C X} }
+    { Γ \entails{\isOfTp{\splitEx* M {x_1}{x_2} C}{X}} }
+
+  \defrule[Sum-E][sta:sum-e]
+    { Γ \entails{\isOfTp M {\sumTy*{A_1}{A_2}}} \\
+      Γ, x_1:A_1 \entails{\isOfTp {C_1} X} \\
+      Γ, x_2:A_2 \entails{\isOfTp {C_2} X} }
+    { Γ \entails{\isOfTp{\caseEx* M x C}{X}} }
+\end{mathpar}
 
 \end{document}
