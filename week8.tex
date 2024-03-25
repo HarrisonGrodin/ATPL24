@@ -10,6 +10,7 @@
 
 \NewDocumentCommand{\memState}{m m}{\left\{ #1 \parallel #2 \right\}}
 \NewDocumentCommand{\mapsVal}{m m}{#1 \hookrightarrow #2}
+\NewDocumentCommand{\letvEx}{m m m}{\Abt{\Opn{letv}}(#1;\Abs<#2>{#3})}
 
 \title{15-791 ATPL \\ Week 8 Notes}
 \author{Tesla Zhang, Jason Yao}
@@ -209,13 +210,57 @@ We present a subset of the state transitions:
 \begin{mathpar}
   \defrule[D-Get][dyn:get]
   {\strut}
-  {\memState{\mu \parallel \mapsVal{a}{V}}{\getCmd<a>} \stepsTo \memState{\mu \parallel \mapsVal{a}{V}}{\retEx*{V}}}
+  {\memState{\mu \parallel \mapsVal{a}{V}}{\getCmd<a>} \stepsTo[\Sigma, \hasTp{a}{A}] \memState{\mu \parallel \mapsVal{a}{V}}{\retEx*{V}}}
 
   \defrule[D-Set][dyn:set]
   {V \evalsTo[\Sigma] V_0}
-  {\memState{\mu \parallel \mapsVal{a}{\_}}{\setCmd<a>{V}} \stepsTo \memState{\mu \parallel \mapsVal{a}{V_0}}{\retEx*{V_0}}}
+  {\memState{\mu \parallel \mapsVal{a}{\_}}{\setCmd<a>{V}} \stepsTo[\Sigma, \hasTp{a}{A}] \memState{\mu \parallel \mapsVal{a}{V_0}}{\retEx*{V_0}}}
 \end{mathpar}
 
 \subsection{Equations}
+We have the following equations that allow use to ``normalize'' \kw{set} and \kw{get} commands to a sequence of \kw{get}s followed by a \kw{sets}:
+
+\begin{mathpar}
+
+  \defrule[E-Set-Get-Same][eq:set-get-same]
+  {\Sigma \entails{\hasTp{a}{A}} \\
+   \Gamma \entails[\Sigma]{\isOfTp{V}{A}}}
+  {\Gamma \entails[\Sigma]{\seqCmd*{\setCmd<a>{V}}{\getCmd<a>} \equiv \setCmd<a>{V}} : \freeTy{A}}
+
+  \defrule[E-Set-Get-Diff][eq:set-get-diff]
+  {\Sigma \entails{\hasTp{a}{A}} \\
+   \Sigma \entails{\hasTp{b}{B}} \\
+   \left( a \neq b \right) \\
+   \Gamma \entails[\Sigma]{\isOfTp{V}{A}}}
+  {\Gamma \entails[\Sigma]{\seqCmd*{\setCmd<a>{V}}{\getCmd<b>} \equiv \fletEx*{\getCmd<b>}{x}{\seqCmd*{\setCmd<a>{V}}}{\retCmd*{x}}} : \freeTy{B}}
+
+  \defrule[E-Set-Set-Same][eq:set-set-same]
+  {\Sigma \entails{\hasTp{a}{A}} \\
+   \Gamma \entails[\Sigma]{\isOfTp{V}{A}} \\
+   \Gamma, \isOfTp{x}{A} \entails[\Sigma]{\isOfTp{V'}{A}}
+   }
+  {\Gamma \entails[\Sigma]{\fletEx*{\setCmd<a>{V}}{x}{\setCmd<a>{V'}} \equiv \letvEx{V}{x}{\setCmd<a>{V'}}} : \freeTy{A}}
+
+  \defrule[E-Set-Set-Diff][eq:set-set-diff]
+  {\Sigma \entails{\hasTp{a}{A}} \\
+   \Sigma \entails{\hasTp{b}{B}} \\
+   \left( a \neq b \right) \\
+   \Gamma \entails[\Sigma]{\isOfTp{V}{A}} \\
+   \Gamma, \isOfTp{x}{A} \entails[\Sigma]{\isOfTp{V'}{B}}
+   }
+  {\Gamma \entails[\Sigma]{\fletEx*{\setCmd<a>{V}}{x}{\setCmd<b>{V'}} \equiv \letvEx{V}{x}{\fletEx*{\setCmd<b>{V'}}{y}{\seqCmd*{\setCmd<a>{V}}{\retCmd*{y}}}}} : \freeTy{B}}
+
+  \defrule[E-Get-Set-Same][eq:get-set-same]
+  {\Sigma \entails{\hasTp{a}{A}}}
+  {\Gamma \entails[\Sigma]{\fletEx*{\getCmd<a>}{x}{\setCmd<a>{x}} \equiv \getCmd<a>} : \freeTy{A}}
+
+  \defrule[E-Get-Get][eq:get-get]
+  {\Sigma \entails{\hasTp{a}{A}} \\
+   \Sigma \entails{\hasTp{b}{B}}}
+  {\Gamma \entails[\Sigma]{\seqCmd*{\getCmd<a>}{\getCmd<b>} \equiv \getCmd<b>} : \freeTy{B}}
+
+\end{mathpar}
+We'll see next week how to justify these equations with exact equality.
+
 
 \end{document}
