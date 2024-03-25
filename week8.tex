@@ -17,6 +17,7 @@
 
 \begin{document}
 \maketitle
+\tableofcontents
 
 \section{Call-by-Push-Value (CBPV)}
 Last week we introduced the lax framework of computation type.
@@ -30,6 +31,8 @@ and negative types \emph{computation types}, which we denote as $X$.
 The polarity here is related to the polarity of the corresponding connectives in linear logic.
 Similar to adjoint logic, we link these two families of types with an adjunction,
 where the computation fragment is similar to the linear fragment in adjoint logic.
+
+\subsection{Syntax}
 
 The syntax of types in CBPV is given by the following grammar:
 
@@ -62,6 +65,9 @@ where there can be reducible expressions that are not directly values, which we 
 The syntax above does not allow non-values in the syntax category of values, but we want to work with
 an eye on the future.
 
+For positive products $\tensorTy*{A_1}{A_2}$, we overload the tensor operator for both the type formation
+and the value introduction due to the presence of another product type taking up the pairing notation.
+
 \subsection{Statics}
 
 The static semantics of CBPV is defined by the following judgment scheme:
@@ -71,10 +77,13 @@ The static semantics of CBPV is defined by the following judgment scheme:
   &Γ \entails{\isOfTp C X} && \quad \text{Computation typing}
 \end{align*}
 
-The rules for values are given by the following typing rules:
+The rules for values are given by the typing rules in~\cref{fig:cbpv-values},
+which only includes identity and the introduction of value types.
 
+\begin{figure}[ht!]
+\centering
 \begin{mathpar}
-  \defrule[Id][sta:id]
+  \defrule[Var][sta:var]
     { \strut }
     { Γ, x:A \entails{\isOfTp x A} }
 
@@ -98,9 +107,15 @@ The rules for values are given by the following typing rules:
     { Γ \entails{\isOfTp C X} }
     { Γ \entails{\isOfTp{\suspEx* C}{\thunkTy* X}} }
 \end{mathpar}
+\caption{Statics for values}
+\label{fig:cbpv-values}
+\end{figure}
 
-The rules for computations are given by the following typing rules:
+The rules for computations are given by the typing rules in~\cref{fig:cbpv-computations},
+which includes the elimination of value types and all the rules of computation types.
 
+\begin{figure}[ht!]
+\centering
 \begin{mathpar}
   \defrule[Thunk-E][sta:thunk-e]
     { Γ \entails{\isOfTp M {\thunkTy* X}} }
@@ -153,5 +168,25 @@ The rules for computations are given by the following typing rules:
       Γ, x_2:A_2 \entails{\isOfTp {C_2} X} }
     { Γ \entails{\isOfTp{\caseEx* M x C}{X}} }
 \end{mathpar}
+\caption{Statics for computations}
+\label{fig:cbpv-computations}
+\end{figure}
+
+We may further extend the CBPV language to include the following constructions,
+which are not present in the current syntax:
+
+\begin{description}
+  \item[Effects] The computation types can include all sorts of effects,
+    such as non-termination, exceptions, state, etc., we will see some of these later.
+  \item[Pure functions] We currently only have functions as computations,
+    which is usually true and is essential for adding effects,
+    but we may also consider adding pure functions as values,
+    whose applications are intended to be values, not computations.
+    Then we can even distinguish between pure and impure functions in the type system.
+  \item[Dependent type formers] A few weeks later, we will be adding dependent types
+    to the CBPV framework, which possibly includes dependent function types and dependent pairs.
+\end{description}
+
+\subsection{Compiling lax to CBPV}
 
 \end{document}
