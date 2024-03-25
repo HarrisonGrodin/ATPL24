@@ -77,6 +77,11 @@ The static semantics of CBPV is defined by the following judgment scheme:
   &Γ \entails{\isOfTp C X} && \quad \text{Computation typing}
 \end{align*}
 
+Similar to the lax framework, the judgment form is stratified into two categories,
+but the context used is always a context of value types.
+Therefore, we only need to (and only intend to) consider value substitutions
+into both of these judgment forms.
+
 The rules for values are given by the typing rules in~\cref{fig:cbpv-values},
 which only includes identity and the introduction of value types.
 
@@ -186,6 +191,31 @@ which are not present in the current syntax:
   \item[Dependent type formers] A few weeks later, we will be adding dependent types
     to the CBPV framework, which possibly includes dependent function types and dependent pairs.
 \end{description}
+
+\begin{remark}
+We refrain from discussing the dynamics of CBPV in this note,
+because the standard presentation of the dynamics of CBPV uses the CK-Machine,
+which is different from our usual presentation of the semantics of type theories
+based on reductions.
+\end{remark}
+
+\subsection{Categorical semantics}
+\newcommand{\Ctx}{\mathsf{Ctx}}
+\newcommand{\CatComp}{\mathsf{Comp}}
+
+Under the standard categorical interpretation of type theories,
+we may interpret the CBPV language as follows:
+
+\begin{itemize}
+\item We interpret the category of context of value types, $\Ctx$,
+  as a bicartesian monoidal category, i.e. with finite products and coproducts.
+  Morphisms in this category correspond to value substitutions,
+  and we identify value types with contexts of length $1$.
+\item The judgment for computations uses value contexts, therefore they have to
+  be \emph{indexed} by $\Ctx$, we denote it as $\CatComp$.
+  Formally speaking, $\CatComp$ are (strict) $\Ctx$-indexed categories,
+  with all the base change functors being identity on objects.
+\end{itemize}
 
 \subsection{Compiling lax to CBPV}
 
