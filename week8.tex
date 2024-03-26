@@ -2,9 +2,9 @@
 
 \input{setup}
 \input{defns}
-\RequirePackage{fourier}
-\RequirePackage{cochineal}
-\RequirePackage{lettrine}
+% \RequirePackage{fourier}
+% \RequirePackage{cochineal}
+% \RequirePackage{lettrine}
 
 \usepackage{newunicodechar}
 \newunicodechar{∀}{\ensuremath{\mathnormal\forall}}
@@ -13,6 +13,12 @@
 \newunicodechar{∈}{\ensuremath{\mathrel\in}}
 \newunicodechar{▷}{\ensuremath{\mathrel\vartriangleright}}
 \newunicodechar{◁}{\ensuremath{\mathrel\vartriangleleft}}
+\newunicodechar{≝}{\ensuremath{\mathrel{:=}}}
+\newunicodechar{⇝}{\ensuremath{\mathrel\rightsquigarrow}}
+\newunicodechar{⇓}{\ensuremath{\mathrel\Downarrow}}
+\newunicodechar{≈}{\ensuremath{\mathrel\approx}}
+\newunicodechar{γ}{\ensuremath{\mathnormal\gamma}}
+\newunicodechar{δ}{\ensuremath{\mathnormal\delta}}
 
 \title{15-791 ATPL \\ Week 8 Notes}
 \author{Tesla Zhang, Jason Yao}
@@ -73,7 +79,7 @@ and the value introduction due to the presence of another product type taking up
 
 \subsection{Statics}
 
-The static semantics of CBPV is defined by the following judgment scheme:
+The static semantics of CBPV is defined by the following judgment schemas:
 
 \begin{align*}
   &Γ \entails{\isOfTp M A} && \quad \text{Value typing} \\
@@ -205,7 +211,7 @@ Instead, we make some informal remarks about it.
 
 The CK-Machine can be viewed as a typed version of K-Machine:
 when describing dynamics using the K-Machine, we provide the stepping relation as rules
-of the following schema, which we will refer to as a \emph{configuration}:
+of the following schemas, which we will refer to as a \emph{configuration}:
 
 \begin{align*}
   &K ▷ C && \text{Running an expression with the stacks $K$} \\
@@ -222,8 +228,11 @@ Where:
 \end{itemize}
 Using our previous convention, it might be more intuitive to write it like this:
 \[ K ▷ (Γ \entails{\isOfTp{C}{X_1}}):X_2 \]
-
 But we will stick to the former notation for consistency with the literature.
+
+The transition of the CK-Machine is defined by the following schema:
+\[ Γ \mid C~X_1~K~X_2 \stepsTo{} Γ \mid C'~X_1'~K'~X_2 \]
+Note that we fix $Γ$ and $X_2$.
 Some examples of transition rule in the CK-Machine,
 including the rules for the computation type and the function type, are listed below:
 
@@ -248,6 +257,8 @@ The stack $K$ is a stack data structure in the traditional sense that can contai
 \item A tag, usually represented as an element in a finite indexing set, for selection in case of sum types.
   Since our sum type is binary, we can use a boolean value to represent the tag.
 \end{itemize}
+When the stack is empty and the computation results in a $\retEx* M$,
+the machine is said to have terminated and computes to the value $M$.
 
 \subsection{Categorical semantics}
 \newcommand{\Ctx}{\mathsf{Ctx}}
@@ -264,14 +275,18 @@ What's more interesting is the interpretation of the computation fragment.
 Instead of interpreting the terms directly, we interpret the \emph{stacks} of the CK-Machine.
 Recall that stacks are used in the following form of judgment:
 \[ Γ \mid C~X_1~K~X_2 \]
-It says that $Γ \entails{\isOfTp{C}{X_1}}$, and $K$ takes this computation of $X_1$ into a computation of $X_2$.
-This is a more natural choice of \emph{morphisms} between computation types.
+It says that $Γ \entails{\isOfTp{C}{X_1}}$, and $K$ takes this
+computation of type $X_1$ into a computation of type $X_2$.
+This is a more natural choice of \emph{morphisms} between computation types,
+so the categorical semantics starts from the stacks, and then we interpret the type and term
+formers of the computation fragment in terms of these stacks.
 
 Since the stacks are \emph{within} value contexts, therefore they have to
 be \emph{indexed} by $\Ctx$, we denote this category as $\Stk$.
 Formally speaking, $\Stk$ is a (strict) $\Ctx$-indexed category,
 with all the base change functors being identity on objects
 (since CBPV is simply-typed after all).
+We refer to this construction as a \emph{locally $\Ctx$-indexed category}.
 
 Here are some standard facts about morphisms in $\Stk$:
 \begin{itemize}
@@ -280,12 +295,78 @@ Here are some standard facts about morphisms in $\Stk$:
 \item A stack that takes $X_1$ to $X_2$ within $Γ$ is a morphism in $\Stk(X_1, X_2)$
   in the fiber over $Γ ∈ \Ctx$.
 \item Composition of morphisms correspond to the concatenation of stacks,
-  defined by induction in the standard way.
+  defined by induction in the standard way, similar to the concatenation of singly linked lists in SML.
 \end{itemize}
 
 For the remaining details, such as the interpretation of computation types and the adjunction
 between $\Ctx$ and $\Stk$, we encourage the readers to refer to the writings of Paul Blain Levy.
 
 \subsection{Compiling lax to CBPV}
+Recall that the lax framework is a stratified type theory with a type former for computation types,
+using the following judgment schemas:
+\begin{align*}
+&Γ \entails{\isOfTp M A} && \text{Value typing} \\
+&Γ \entails{\retsTp E A} && \text{Computation typing} \\
+\end{align*}
+We may define an interpretation, or a \emph{compiler}, from the lax framework to CBPV.
+We describe the translation using the following syntax:
+\begin{enumerate}
+\item For value of type $A$ in lax, we define $||A||$ to be its interpretation in CBPV, which is a value type;
+\item For computation of type $A$ in lax, we define $|A|$ to be $\freeTy*{||A||}$, which is a computation type;
+\end{enumerate}
+The translation of types is defined below:
+\begin{align*}
+  ||\unitTy*|| &≝ \unitTy* \\
+  ||\prodTy*{A_1}{A_2}|| &≝ \tensorTy*{||A_1||}{||A_2||} \\
+  ||\voidTy*|| &≝ \voidTy* \\
+  ||\sumTy*{A_1}{A_2}|| &≝ \sumTy*{||A_1||}{||A_2||} \\
+  ||\arrTy*{A_1}{A_2}|| &≝ \parrTy*{||A_1||}{||A_2||} \\
+  ||\compTy*{A}|| &≝ \thunkTy*{|A|} \\
+  |A| &≝ \freeTy*{||A||}
+\end{align*}
+We extend the translation to contexts in the evident way.
+Then, we may define value interpretation $||M||$ and $|M|$ with the following typing soundness theorem in mind:
+\begin{theorem}[Soundness]
+~
+\begin{enumerate}
+\item If in lax $Γ \entails{\isOfTp M A}$, then in CBPV $||Γ|| \entails{\isOfTp{||M||}{||A||}}$;
+\item If in lax $Γ \entails{\retsTp E A}$, then in CBPV $||Γ|| \entails{\isOfTp{|E|}{|A|}}$.
+\end{enumerate}
+\end{theorem}
+The translation rule is defined using the following schema:
+\begin{align*}
+&Γ \entails{\isOfTp M A} ⇝ ||M|| \\ 
+&Γ \entails{\retsTp E A} ⇝ |E|
+\end{align*}
+We omit the full transition rules and the proof of soundness, as they are part of the homework.
+
+It is not enough to only define type-sound translation,
+we have to make sure that it is also operationally sound.
+To do so, we define a \emph{heterogeneous} exact equality, called \emph{correspondence}, between terms in the two languages:
+\begin{definition}[Correspondence]
+~
+\begin{enumerate}
+\item $M ≈ V ∈ \compTy*A$ iff $∃ E, C$ such that $M ⇓ \compTy*E$, $V ⇓ \suspEx*C$, and $E \sim C ∈ A$;
+\item $E \sim C ∈ A$ iff $∃ V, W$ such that $E \stepsTo(*) \retEx*V$, $C \stepsTo(*) \retEx*W$, and $V ≈ W ∈ A$.
+\end{enumerate}
+\end{definition}
+Then we extend this to open contexts:
+\begin{definition}
+~
+\begin{enumerate}
+\item $Γ \gg M ≈ V ∈ A$ iff $∀γ ≈ δ ∈ Γ$, $\hat{γ}(M) ≈ \hat{δ}(V) ∈ A$;
+\item $Γ \gg E \sim C ∈ A$ iff $∀γ ≈ δ ∈ Γ$, $\hat{γ}(E) \sim \hat{δ}(C) ∈ A$.
+\end{enumerate}
+\end{definition}
+And we can state the fundamental theorem usually:
+\begin{theorem}[Translation Correctness]
+~
+\begin{enumerate}
+\item If $Γ \entails{\isOfTp M A} ⇝ ||M||$, then $Γ \gg M ≈ ||M|| ∈ A$;
+\item If $Γ \entails{\retsTp E A} ⇝ |E|$, then $Γ \gg E \sim |E| ∈ A$.
+\end{enumerate}
+\end{theorem}
+We may prove it using the heterogeneous exact equality as the strengthened induction hypothesis,
+and the proof is done in homework.
 
 \end{document}
