@@ -470,7 +470,6 @@ Finally, we also have two channels \kw{stdin} and \kw{stdout} which carry data o
 
 \subsubsection{Transitions}
 We present a subset of the state transitions:
-\todo{Needed to use \kw{s} in the step actions instead since $s$ shows up as $\int$ for some reason}
 \begin{mathpar}
   \defrule[D-Input][dyn:input]
   {\strut}
@@ -504,9 +503,6 @@ The dynamics for I/O are relatively straightforward. If ${\cal I}$ is not empty 
 
 \ruleref{dyn:single} allows the program to take steps not pertaining to I/O according to the base CBPV dynamics. In this case $\alpha$ would be $\epsilon$, the silent action.
 
-\todo{Not sure how much of this to mention/is this extraneous detail? \ruleref{dyn:single} wasn't in the lecture, but I felt it was necessary to mention to show that the rest of the program can still run without needing to send messages}
-Note that this rule also allows for asynchronous sends since a process could perform an action $\sndAc*{a}{s}$ without a complementary receive. This is not an issue since we can view channels as a message queue, so any asynchronous send just adds its message to the queue. Reads must still be synchronous since there must be a value available on the queue to use in the rest of the program.
-
 \subsection{Equations}
 We present a few select equations:
 \begin{mathpar}
@@ -535,8 +531,6 @@ We present a few select equations:
 Note that rules \ruleref{eq:print-fun} and \ruleref{eq:read-fun} say that performing I/O before a function definition is equivalent to performing I/O within the function definition. This might be surprising, since one could imagine that the RHS would not be guaranteed to perform the I/O if the function is not applied. However, we will soon see how to justify this through exact equality.
 
 \subsection{Exact Equality}
-
-\todo{This definition changed...}
 This section presented during lecture has been updated, so we will present a higher-level overview of exact equality.
 
 Exact equality between terms $\eqExact{V}{V'}{A}$ is defined as always by induction on $A$ using evaluation dynamics. Essentially, valuable terms are exactly equal if they evaluate to values whose constituent parts are exactly equal. At the base types, they are equal if they are the same value.
