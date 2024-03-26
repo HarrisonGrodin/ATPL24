@@ -11,6 +11,7 @@
 \NewDocumentCommand{\memState}{m m}{\left\{ #1 \parallel #2 \right\}}
 \NewDocumentCommand{\mapsVal}{m m}{#1 \hookrightarrow #2}
 \NewDocumentCommand{\letvEx}{m m m}{\Abt{\Opn{letv}}(#1;\Abs<#2>{#3})}
+\NewDocumentCommand{\eqExact}{m m m}{#1 \doteq #2 \in #3}
 
 \title{15-791 ATPL \\ Week 8 Notes}
 \author{Tesla Zhang, Jason Yao}
@@ -53,7 +54,7 @@ The static semantics of CBPV is defined by the following judgment given by the f
 \end{mathpar}
 
 \section{I/O Effects}
-We can represent various effects using CBPV as the framework. Here, we represent simple I/O effects.
+We can represent various effects using CBPV as the underlying framework. Here, we introduce simple I/O effects with printing and reading.
 
 \subsection{Grammar}
 We introduce a new base type $\kw{string}$. We also introduce two new commands, $\kw{print}$ and $\kw{read}$, which respectively print a string to standard out and read a string from standard in.
@@ -61,12 +62,12 @@ We introduce a new base type $\kw{string}$. We also introduce two new commands, 
 \[
     \begin{array}{rl} 
         A ::= & \cdots \mid \kw{string} \\
-        C ::= & \cdots \mid \kw{print}(V) \mid \kw{read}  \\
+        C ::= & \cdots \mid \kw{print}(V) \mid \kw{read} 
     \end{array}
 \]
 
 \subsection{Statics}
-We add the following typing rules for the new commands. Assume that \kw{string} has some sensible typing rules.
+We add the following typing rules for the new commands. Assume that \kw{string} has some sensible typing rules, we just use it as the type we can print/read.
 
 \begin{mathpar}
   \defrule[T-Print][sta:print]
@@ -85,7 +86,7 @@ For values, we use the typical evaluation semantics where $V \evalsTo V_0$ for s
 For computations, we describe a configuration/state transition system based on a simplified process calculus. We have three processes $\cal I$, $\cal O$, and $C$ running in parallel composition, written as
 ${\cal I} \parallel {\cal O} \parallel C$. $\cal I$ and $\cal O$ are the input and output processes, respectively, and are represented as lists of \kw{string}s. $C$ is the current running computation.
 
-Note that configurations are unique up to structural congruence, so the processes can be freely reordered/nested/etc. as necessary for rules to apply (e.g.  ${\cal I} \parallel {\cal O} \parallel C \equiv {\cal I} \parallel C \parallel {\cal O} \equiv {\cal I} \parallel \left( {\cal O} \parallel C \right)$ ).
+Note that configurations are unique up to structural congruence, so the processes can be freely reordered/nested/etc. as necessary for the dynamics rules to apply (e.g.  ${\cal I} \parallel {\cal O} \parallel C \equiv {\cal I} \parallel C \parallel {\cal O} \equiv {\cal I} \parallel \left( {\cal O} \parallel C \right)$ ).
 
 Finally, we also have two channels \kw{stdin} and \kw{stdout} which carry data of type \kw{string}.
 
@@ -126,10 +127,10 @@ The dynamics for I/O are relatively straightforward. If ${\cal I}$ is not empty 
 \ruleref{dyn:single} allows the program to take steps not pertaining to I/O according to the base CBPV dynamics. In this case $\alpha$ would be $\epsilon$, the silent action.
 
 \todo{Not sure how much of this to mention/is this extraneous detail? \ruleref{dyn:single} wasn't in the lecture, but I felt it was necessary to mention to show that the rest of the program can still run without needing to send messages}
-Note that this rule also allows for asynchronous sends since a process could perform an action $\sndAc*{a}{s}$ without a complementary receive. This is not an issue since we can view channels as a message queue, so any asynchronous send just adds its message to the queue. Reads must still by synchronous since there must be a value available on the queue to use in the rest of the program.
+Note that this rule also allows for asynchronous sends since a process could perform an action $\sndAc*{a}{s}$ without a complementary receive. This is not an issue since we can view channels as a message queue, so any asynchronous send just adds its message to the queue. Reads must still be synchronous since there must be a value available on the queue to use in the rest of the program.
 
 \subsection{Equations}
-We have the following equations:
+We present a few select equations:
 \begin{mathpar}
 
   \defrule[E-Print-Fun][eq:print-fun]
@@ -158,9 +159,14 @@ Note that rules \ruleref{eq:print-fun} and \ruleref{eq:read-fun} say that perfor
 \subsection{Exact Equality}
 
 \todo{This definition changed...}
+This section presented during lecture has been updated, so we will present a higher-level overview of exact equality.
+
+Exact equality between terms $\eqExact{V}{V'}{A}$ is defined as always by induction on $A$ using evaluation dynamics. Essentially, valuable terms are exactly equal if they evaluate to values whose constituent parts are exactly equal. At the base types, they are equal if they are the same value.
+
+For computations $\eqExact{C}{C'}{X}$, we essentially want their behavior to be the same. If the computations return a value, then we want the values to be exactly equal \emph{and} the I/O behavior should be the same. However, if they result in another computation, we \emph{do not} require the I/O behavior to be the same, allowing for the discrepancy seen before in rules \ruleref{eq:print-fun} and \ruleref{eq:read-fun}. This is since ultimately, we only care about the final result of the computation, so intermediate I/O descrepancies are not important.
 
 \section{Mutable State}
-We can also consider store effects using CBPV. Here, we represent mutable state with a set of predefined assignables.
+We also consider store effects using CBPV. For simplicity, we represent mutable state with a set of predefined assignables.
 
 \subsection{Grammar}
 We add two new commands, \kw{get} and \kw{set}, which respectively read and write to memory.
@@ -176,7 +182,7 @@ We introduce a new context $\Sigma$ for assignables that maps assignables to the
 \[
   \Sigma = \hasTp{a_1}{A_1}, \ldots,\, \hasTp{a_n}{A_n}
 \]
-Note that each type $A_i$ must be \emph{ground}. A ground type is essentially any value type $A$ \emph{except} $\thunkTy{X}$. We will see why this is necessary next week.
+Note that each type $A_i$ must be \emph{ground}. A ground type is essentially any value type $A$ \emph{except} $\thunkTy{X}$. If we allowed $\thunkTy{X}$, we would be able to store computations in memory, which allows for partiality through backpatching. We'll see next week that the definition for exact equality is not well formed if there were no restrictions on the types of assignables.
 
 We add the following typing rules for the new commands:
 \begin{mathpar}
@@ -218,7 +224,7 @@ We present a subset of the state transitions:
 \end{mathpar}
 
 \subsection{Equations}
-We have the following equations that allow use to ``normalize'' \kw{set} and \kw{get} commands to a sequence of \kw{get}s followed by a \kw{sets}:
+We have the following equations that allow us to ``normalize'' \kw{set} and \kw{get} commands to a sequence of \kw{get}s followed by a \kw{sets}:
 
 \begin{mathpar}
 
