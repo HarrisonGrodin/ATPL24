@@ -257,8 +257,8 @@ The stack $K$ is a stack data structure in the traditional sense that can contai
 \item A tag, usually represented as an element in a finite indexing set, for selection in case of sum types.
   Since our sum type is binary, we can use a boolean value to represent the tag.
 \end{itemize}
-When the stack is empty and the computation results in a $\retEx* M$,
-the machine is said to have terminated and computes to the value $M$.
+When the stack is empty and the computation results in an introduction form, such as $\retEx* M$,
+the machine is said to have terminated and computes to that introduction form.
 
 \subsection{Categorical semantics}
 \newcommand{\Ctx}{\mathsf{Ctx}}
