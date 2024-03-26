@@ -229,27 +229,53 @@ Where:
 \item $K$ is the stack that is similar to the K-Machine (not formally defined yet),
 \item $X₂$ is the type of the result of the computation.
 \end{itemize}
-Using our previous convention, it might be more intuitive to write it like this:
-\[ K ▷ (Γ \entails{\isOfTp{C}{X₁}}):X₂ \]
+Using our previous convention, it might be more intuitive to write it like one of these,
+depending on the direction of the transition:
+\begin{align*}
+  K &▷ (Γ \entails{\isOfTp{C}{X₁}}):X₂\\
+  K &◁ (Γ \entails{\isOfTp{C}{X₁}}):X₂
+\end{align*}
 But we will stick to the former notation for consistency with the literature.
 
 The transition of the CK-Machine is defined by the following schema:
-\[ Γ \mid C~X₁~K~X₂ \stepsTo{} Γ \mid C'~X₁'~K'~X₂ \]
-Note that we fix $Γ$ and $X₂$.
+\begin{align*}
+&Γ \mid C~X₁~K~X₂ \stepsTo(l) Γ \mid C'~X₁'~K'~X₂\\
+&Γ \mid C~X₁~K~X₂ \stepsTo(r) Γ \mid C'~X₁'~K'~X₂
+\end{align*}
+Note that in the transition, we fix $Γ$ and $X₂$,
+which implicitly indicates that well-typedness of the transition implies preservation.
+
+\begin{remark}
+In K-Machine, the direction of the transition is indicated in the configuration:
+if we expect the expression to reduce, we write $K ▷ C$, otherwise we write $K ◁ M$.
+
+In the CK-Machine, the direction of the transition is indicated in the transition rule:
+if we're pushing frames into the stack, we use $\stepsTo(\text{push})$,
+and if we're popping frames out of the stack, we use $\stepsTo(\text{pop})$.
+
+Pushing in the CK-Machine corresponds to elimination, and popping corresponds to introduction.
+\end{remark}
+
 Some examples of transition rule in the CK-Machine,
-including the rules for the computation type and the function type, are listed below:
+including the rules for the computation type and the function type, are listed below.
+Since the full rule is too long to fit in one line and the context and the result type are
+unchanged during the transition, we write
+\[C~X~K\]
+as a short-hand for
+\[Γ \mid C~X~K~X'\]
+and the rules are listed below:
 
 \[
-\begin{array}{rllllll}
-&Γ \mid &\bndEx*{C₁}{x}{C₂}&X₁&K&X₂\\ \stepsTo{}
-&Γ \mid &C₁&\freeTy*{X₃}&(\bndEx*{-}{x}{C₂} :: K)&X₂\\
-&Γ \mid &\retEx* M&\freeTy*{X₃}&(\bndEx* - x C :: K)&X₂\\ \stepsTo{}
-&Γ \mid &[M/x]C&X₁&K&X₂\\
+\begin{array}{|rlll|} \hline
+&\bndEx*{C₁}{x}{C₂}&X₁&K\\ \stepsTo(\text{push})
+&C₁&\freeTy*{X₂}&(\bndEx*{-}{x}{C₂} :: K)\\ \hline
+&\retEx* M&\freeTy*{X₂}&(\bndEx* - x C :: K)\\ \stepsTo(\text{pop})
+&[M/x]C&X₁&K\\ \hline
 
-&Γ \mid &\appEx* C M&X₁&K&X₂ \\ \stepsTo{}
-&Γ \mid &C&\parrTy*{A}{X₁}&(M :: K)&X₂ \\
-&Γ \mid &\lamEx* x C&\parrTy*{A}{X₁}&(M :: K)&X₂ \\ \stepsTo{}
-&Γ \mid &[M/x]C&X₁&K&X₂
+&\appEx* C M&X&K \\ \stepsTo(\text{push})
+&C&\parrTy*{A}{X}&(M :: K) \\ \hline
+&\lamEx* x C&\parrTy*{A}{X}&(M :: K) \\ \stepsTo(\text{pop})
+&[M/x]C&X&K \\ \hline
 \end{array}
 \]
 
@@ -269,10 +295,19 @@ the machine is said to have terminated and computes to that introduction form.
 
 Under the standard categorical interpretation of type theories,
 we may expect the value fragment of CBPV language to be interpreted as a
-bicartesian monoidal category,  i.e.~with finite products and coproducts,
-which is regarded as a category of contexts of value types, denoted $\Ctx$.
-Morphisms in this category correspond to value substitutions,
+\emph{locally bicartesian monoidal category} with pullbacks,
+where bicartesian monoidal means it has finite products and coproducts.
+
+This category is regarded as a category of contexts of value types, denoted $\Ctx$.
+Morphisms in this category correspond to value substitution objects,
 and we identify value types with contexts of length $1$.
+
+Rationale for the construction:
+\begin{itemize}
+\item We require pullbacks to interpret the operation that lifts a substitution object into a substitution functor.
+\item We require bicartesian monoidal structure to interpret the product and sum types.
+  Since these constructions are within a context, we need them to be local.
+\end{itemize}
 
 What's more interesting is the interpretation of the computation fragment.
 Instead of interpreting the terms directly, we interpret the
@@ -288,19 +323,32 @@ formers of the computation fragment in terms of these stacks.
 
 Since the stacks are \emph{within} value contexts, therefore they have to
 be \emph{indexed} by $\Ctx$, we denote this category as $\Stk$.
-Formally speaking, $\Stk$ is a (strict) $\Ctx$-indexed category,
-with all the base change functors being identity on objects
-(since CBPV is simply-typed after all).
+Formally speaking, $\Stk$ is a (strict) $\Ctx$-indexed category (i.e.~a $1$-functor $\Ctx \to \mathsf{Cat}$),
+with all the base change (also known as \emph{reindexing}) functors being identity on objects
+(since CBPV is simply-typed after all, see below).
 We refer to this construction as a \emph{locally $\Ctx$-indexed category}.
 
 Here are some standard facts about morphisms in $\Stk$:
 \begin{itemize}
 \item The identity morphism is the empty stack, which operationally does nothing,
   thus composition with them satisfies the identity laws.
-\item A stack that takes $X₁$ to $X₂$ within $Γ$ is a morphism in $\Stk(X₁, X₂)$
-  in the fiber over $Γ ∈ \Ctx$.
+\item The stack $K$ in $Γ \mid -~X₁~K~X₂$, which takes $X₁$ to $X₂$ within $Γ$,
+  is a morphism in $\Stk(X₁, X₂)$ in the fiber over $Γ ∈ \Ctx$.
 \item Composition of morphisms correspond to the concatenation of stacks,
   defined by induction in the standard way, similar to the concatenation of singly linked lists in SML.
+\end{itemize}
+
+Here are some standard facts about base change in $\Stk$:
+\begin{itemize}
+\item
+Since morphisms in $\Ctx$ induce substitutions, we already have substitution for value types directly,
+and substitutions for computation types are induced by the fact that $\Stk$ is an indexed category.
+\item
+The fact that base change of $\Stk$ is identity on objects means that the substitution functor does not change
+the type, which corresponds to the fact that CBPV is simply-typed.
+However, they \emph{do} change the stack, so they are not identity on morphisms, evidently.
+\item Strictness of the indexed category is essentially to avoid some
+technical issues regarding substitution up to isomorphism.
 \end{itemize}
 
 For the remaining details, such as the interpretation of computation types and the adjunction
