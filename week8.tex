@@ -53,6 +53,7 @@ where the computation fragment is similar to the linear fragment in adjoint logi
 
 The syntax of types in CBPV is given by the following grammar:
 
+\todo{Use $\freeTy{A}$ and $\thunkTy{X}$ instead? This notation wasn't presented in class so it might be confusing}
 \[
   \begin{array}{rcl}
     \text{Computation types} \quad & X ::= & \prodTy*{X₁}{X₂} \mid \parrTy*{A₁}{X₂} \mid \freeTy*{A} \\
@@ -270,6 +271,7 @@ as a short-hand for
 \[Γ \mid C~X~K~X'\]
 and the rules are listed below:
 
+\todo{consider swapping $X_1$ and $X_2$ for the first rule to match with $C_1$ and $C_2$?}
 \[
 \begin{array}{|rlll|} \hline
 &\bndEx*{C₁}{x}{C₂}&X₁&K\\ \stepsTo(\text{push})
@@ -298,6 +300,7 @@ the machine is said to have terminated and computes to that introduction form.
 \newcommand{\Ctx}{\mathsf{Ctx}}
 \newcommand{\Stk}{\mathsf{Stk}}
 
+\todo{Idk category theory and assume many people in class also don't, maybe add a note to skip to the next section?}
 Under the standard categorical interpretation of type theories,
 we may expect the value fragment of CBPV language to be interpreted as a
 \emph{locally bicartesian monoidal category} with pullbacks of context projections,
@@ -432,10 +435,10 @@ We may prove it using the heterogeneous exact equality as the strengthened induc
 and the proof is done in homework.
 
 \section{I/O Effects}
-We can represent various effects using CBPV as the underlying framework. Here, we introduce simple I/O effects with printing and reading.
+With the foundations of CBPV established, we can use this framework to represent various effects. Here, we introduce simple I/O effects with printing and reading.
 
 \subsection{Grammar}
-We introduce a new base type $\kw{string}$. We also introduce two new commands, $\kw{print}$ and $\kw{read}$, which respectively print a string to standard out and read a string from standard in.
+We introduce a new base type $\kw{string}$. We also introduce two new commands, $\kw{print}$ and $\kw{read}$, which respectively print a $\kw{string}$ to standard out and read a $\kw{string}$ from standard in.
 
 \[
     \begin{array}{rl} 
@@ -506,7 +509,7 @@ Note that rule \ruleref{dyn:par} relies on the definition of $\overline{\alpha}$
 
 The dynamics for I/O are relatively straightforward. If ${\cal I}$ is not empty and the program commands a \kw{read}, \ruleref{dyn:par} allows the overall configuration to take a step by pairing \ruleref{dyn:input} and \ruleref{dyn:read}. Similarly, if the program wishes to \kw{print}, \ruleref{dyn:output} and \ruleref{dyn:print} will apply concurrently.
 
-\ruleref{dyn:single} allows the program to take steps not pertaining to I/O according to the base CBPV dynamics. In this case $\alpha$ would be $\epsilon$, the silent action.
+\ruleref{dyn:single} allows the program to take steps not pertaining to I/O according to the base CBPV dynamics. In this case $\alpha$ would be $\epsilon$, the silent action. Note that this rule also allows for asynchronous sends since a process could perform an action $\sndAc*{a}{s}$ without a complementary receive. This is not an issue since we can view channels as a message queue, so any asynchronous send just adds its message to the queue. Reads must still be synchronous since there must be a value available on the queue to use in the rest of the program.
 
 \subsection{Equations}
 We present a few select equations in \cref{fig:io-eq}.
@@ -549,7 +552,7 @@ Exact equality between terms $\eqExact{V}{V'}{A}$ is defined as always by induct
 For computations $\eqExact{C}{C'}{X}$, we essentially want their behavior to be the same. If the computations return a value, then we want the values to be exactly equal \emph{and} the I/O behavior should be the same. However, if they result in another computation, we \emph{do not} require the I/O behavior to be the same, allowing for the discrepancy seen before in rules \ruleref{eq:print-fun} and \ruleref{eq:read-fun}. This is since ultimately, we only care about the final result of the computation, so intermediate I/O descrepancies are not important.
 
 \section{Mutable State}
-We also consider store effects using CBPV. For simplicity, we represent mutable state with a set of predefined assignables.
+We also consider store effects using CBPV. For simplicity, we represent mutable state with a set of predefined assignables represention memory locations. We will consider dynamically generating new assignables next week.
 
 \subsection{Grammar}
 We add two new commands, \kw{get} and \kw{set}, which respectively read and write to memory.
@@ -558,14 +561,14 @@ We add two new commands, \kw{get} and \kw{set}, which respectively read and writ
         C ::= & \cdots \mid \getCmd<a> \mid \setCmd<a>{V}
     \end{array}
 \]
-Here, $a$ is an assignable, which is essentially a unique identifier for a memory location.
+Here, $a$ is an assignable, which is essentially a unique symbol for a memory location.
 
 \subsection{Statics}
 We introduce a new context $\Sigma$ for assignables that maps assignables to their types. Since we are only considering a predefined set of assignables, $\Sigma$ is fxed.
 \[
   \Sigma = \hasTp{a_1}{A_1}, \ldots,\, \hasTp{a_n}{A_n}
 \]
-Note that each type $A_i$ must be \emph{ground}. A ground type is essentially any value type $A$ \emph{except} $\thunkTy{X}$. If we allowed $\thunkTy{X}$, we would be able to store computations in memory, which allows for partiality through backpatching. We'll see next week that the definition for exact equality is not well formed if there were no restrictions on the types of assignables.
+Note that each type $A_i$ must be \emph{ground}. A ground type is essentially any value type $A$ \emph{except} $\thunkTy{X}$. If we allowed $\thunkTy{X}$, we would be able to store computations in memory, which allows for partiality through backpatching. We'll also see next week that the definition for exact equality is not well formed if there were no restrictions on the types of assignables.
 
 We add the following typing rules for the new commands:
 \begin{mathpar}
@@ -591,7 +594,7 @@ $\mu$ is composed of cells mapping assignables to values:
 \[
   \mu = \mapsVal{a_1}{V_1} \parallel \cdots \parallel \mapsVal{a_n}{V_n}
 \]
-For each cell $1 \le i \le n$, we have $\Sigma \entails{\hasTp{a_i}{A_i}}$ and $\Sigma \entails[\varepsilon]{\isOfTp{V_i}{A_i}}$. Note that the empty assignable context $\varepsilon$ is used to indicate $V_i$ cannot reference any memory.
+For each cell $1 \le i \le n$, we have $\Sigma \entails{\hasTp{a_i}{A_i}}$ and $\Sigma \entails[\varepsilon]{\isOfTp{V_i}{A_i}}$. Note that the empty assignable context $\varepsilon$ is used to indicate $V_i$ cannot reference any memory since it must be of a ground type.
 
 \subsubsection{Transitions}
 We present a subset of the state transitions:
@@ -607,7 +610,10 @@ We present a subset of the state transitions:
 \end{mathpar}
 
 \subsection{Equations}
-We have the following equations in \cref{fig:mutable-eq} that allow us to ``normalize'' \kw{set} and \kw{get} commands to a sequence of \kw{get}s followed by a sequence \kw{sets}:
+We have the following equations in \cref{fig:mutable-eq}. For simplicity, we define 
+\[\letvEx{V}{x}{C} \triangleq \fletEx*{\retCmd*{V}}{x}{C}\]
+
+Note that many of the equations show how to ``swap'' a \kw{get} before a \kw{set} or remove the \kw{get} entirely. Combined with the rest of the equations, this allow us to ``normalize'' \kw{set} and \kw{get} commands to a sequence of \kw{get}s followed by a sequence \kw{sets}.
 
 \begin{figure}[ht!]
   \centering
