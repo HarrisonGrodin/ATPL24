@@ -1,0 +1,372 @@
+\documentclass[letterpaper]{article}
+
+\input{setup}
+\input{defns}
+% \RequirePackage{fourier}
+% \RequirePackage{cochineal}
+% \RequirePackage{lettrine}
+
+\usepackage{newunicodechar}
+\newunicodechar{∀}{\ensuremath{\mathnormal\forall}}
+\newunicodechar{∃}{\ensuremath{\mathnormal\exists}}
+\newunicodechar{Γ}{\ensuremath{\mathnormal\Gamma}}
+\newunicodechar{∈}{\ensuremath{\mathrel\in}}
+\newunicodechar{▷}{\ensuremath{\mathrel\vartriangleright}}
+\newunicodechar{◁}{\ensuremath{\mathrel\vartriangleleft}}
+\newunicodechar{≝}{\ensuremath{\mathrel{:=}}}
+\newunicodechar{⇝}{\ensuremath{\mathrel\rightsquigarrow}}
+\newunicodechar{⇓}{\ensuremath{\mathrel\Downarrow}}
+\newunicodechar{≈}{\ensuremath{\mathrel\approx}}
+\newunicodechar{γ}{\ensuremath{\mathnormal\gamma}}
+\newunicodechar{δ}{\ensuremath{\mathnormal\delta}}
+
+\title{15-791 ATPL \\ Week 8 Notes}
+\author{Tesla Zhang, Jason Yao}
+\date{\today}
+
+\begin{document}
+\maketitle
+\tableofcontents
+
+\section{Call-by-Push-Value (CBPV)}
+Last week we introduced the lax framework of computation type.
+This week, we introduce another approach to stratify value types and computation types,
+called \emph{call-by-push-value} (CBPV), or \emph{polarization}.
+
+Instead of introducing a type former for computation types,
+we maintain the distinction between type structures instead.
+We consider positive types \emph{values types}, which we denote as $A$,
+and negative types \emph{computation types}, which we denote as $X$.
+The polarity here is related to the polarity of the corresponding connectives in linear logic.
+Similar to adjoint logic, we link these two families of types with an adjunction,
+where the computation fragment is similar to the linear fragment in adjoint logic.
+
+\subsection{Syntax}
+
+The syntax of types in CBPV is given by the following grammar:
+
+\[
+  \begin{array}{rcl}
+    \text{Computation types} \quad & X ::= & \prodTy*{X_1}{X_2} \mid \parrTy*{A_1}{X_2} \mid \freeTy*{A} \\
+    \text{Value types} \quad       & A ::= & \topTy* \mid \tensorTy*{A_1}{A_2} \mid \sumTy*{A_1}{A_2} \mid \thunkTy*{X} \\
+  \end{array}
+\]
+
+For simplicity, we introduce the function type only as a computation type,
+and for products, we introduce both versions, corresponding to the nature of the product that
+it can be used positively or negatively.
+
+The syntax for terms is given by the following grammar:
+
+\[
+  \begin{array}{rcl}
+    \text{Values} \quad M, V ::=
+      && x \mid \unitEx* \mid \tensorEx*{M_1}{M_2} \mid \injEx*<1>{M} \mid \injEx*<2>{M} \mid \suspEx*{C} \\
+    \text{Computations} \quad C ::=
+      && \retEx*{M} \mid \bndEx*{C_1}{x}{C_2} \mid \pairEx*{C_1}{C_2} \mid \projEx*<1>{C} \mid \projEx*<2>{C} \mid \\
+      && \lamEx*{x}{C} \mid \appEx*{C}{M} \mid \forceEx*{M} \mid \checkEx*{M}{C} \mid \\
+      && \splitEx*{M}{x_1}{x_2}{C} \mid \caseEx* M x C
+  \end{array}
+\]
+
+We tend to use $V$ to indicate that a value is, a value, as opposed to some potential extensions of the syntax
+where there can be reducible expressions that are not directly values, which we will use $M$.
+The syntax above does not allow non-values in the syntax category of values, but we want to work with
+an eye on the future.
+
+For positive products $\tensorTy*{A_1}{A_2}$, we overload the tensor operator for both the type formation
+and the value introduction due to the presence of another product type taking up the pairing notation.
+
+\subsection{Statics}
+
+The static semantics of CBPV is defined by the following judgment schemas:
+
+\begin{align*}
+  &Γ \entails{\isOfTp M A} && \quad \text{Value typing} \\
+  &Γ \entails{\isOfTp C X} && \quad \text{Computation typing}
+\end{align*}
+
+Similar to the lax framework, the judgment form is stratified into two categories,
+but the context used is always a context of value types.
+Therefore, we only need to (and only intend to) consider value substitutions
+into both of these judgment forms.
+
+The rules for values are given by the typing rules in~\cref{fig:cbpv-values},
+which only includes identity and the introduction of value types.
+
+\begin{figure}[ht!]
+\centering
+\begin{mathpar}
+  \defrule[Var][sta:var]
+    { \strut }
+    { Γ, x:A \entails{\isOfTp x A} }
+
+  \defrule[Unit-I][sta:unit-i]
+    { \strut }
+    { Γ \entails{\isOfTp{\unitEx*}{\topTy*}} }
+
+  \defrule[Tensor-I][sta:tensor-i]
+    { Γ \entails{\isOfTp {M_1} {A_1}} \\ Γ \entails{\isOfTp {M_2} {A_2}} }
+    { Γ \entails{\isOfTp{\tensorEx*{M_1}{M_2}}{\tensorTy*{A_1}{A_2}}} }
+
+  \defrule[Sum-I1][sta:sum-i1]
+    { Γ \entails{\isOfTp M {A_1}} }
+    { Γ \entails{\isOfTp{\injEx*<1> M}{\sumTy*{A_1}{A_2}}} }
+
+  \defrule[Sum-I2][sta:sum-i2]
+    { Γ \entails{\isOfTp M {A_2}} }
+    { Γ \entails{\isOfTp{\injEx*<2> M}{\sumTy*{A_1}{A_2}}} }
+
+  \defrule[Thunk-I][sta:thunk-i]
+    { Γ \entails{\isOfTp C X} }
+    { Γ \entails{\isOfTp{\suspEx* C}{\thunkTy* X}} }
+\end{mathpar}
+\caption{Statics for values}
+\label{fig:cbpv-values}
+\end{figure}
+
+The rules for computations are given by the typing rules in~\cref{fig:cbpv-computations},
+which includes the elimination of value types and all the rules of computation types.
+
+\begin{figure}[ht!]
+\centering
+\begin{mathpar}
+  \defrule[Thunk-E][sta:thunk-e]
+    { Γ \entails{\isOfTp M {\thunkTy* X}} }
+    { Γ \entails{\isOfTp{\forceEx* M}{X}} }
+
+  \defrule[Free-I][sta:free-i]
+    { Γ \entails{\isOfTp M A} }
+    { Γ \entails{\isOfTp{\retEx* M}{\freeTy* A}} }
+
+  \defrule[Free-E][sta:free-e]
+    { Γ \entails{\isOfTp {C_1} {\freeTy*{A_1}}} \\
+      Γ, x:A_1 \entails{\isOfTp {C_2}{X_2}} }
+    { Γ \entails{\isOfTp{\bndEx*{C_1}{x}{C_2}}{X_2}} }
+
+  \defrule[Prod-I][sta:prod-i]
+    { Γ \entails{\isOfTp {C_1} {X_1}} \\
+      Γ \entails{\isOfTp {C_2} {X_2}} }
+    { Γ \entails{\isOfTp{\pairEx*{C_1}{C_2}}{\prodTy*{X_1}{X_2}}} }
+
+  \defrule[Prod-E1][sta:prod-e1]
+    { Γ \entails{\isOfTp C {\prodTy*{X_1}{X_2}}} }
+    { Γ \entails{\isOfTp{\projEx*<1> C}{X_1}} }
+
+  \defrule[Prod-E2][sta:prod-e2]
+    { Γ \entails{\isOfTp C {\prodTy*{X_1}{X_2}}} }
+    { Γ \entails{\isOfTp{\projEx*<2> C}{X_2}} }
+
+  \defrule[Parr-I][sta:parr-i]
+    { Γ, x:A \entails{\isOfTp C X} }
+    { Γ \entails{\isOfTp{\lamEx* x C}{\parrTy* A X}} }
+
+  \defrule[Parr-E][sta:parr-e]
+    { Γ \entails{\isOfTp C {\parrTy* A X}} \\
+      Γ \entails{\isOfTp M A} }
+    { Γ \entails{\isOfTp{\appEx* C M}{X}} }
+
+  \defrule[Unit-E][sta:unit-e]
+    { Γ \entails{\isOfTp M \topTy*} \\
+      Γ \entails{\isOfTp C X} }
+    { Γ \entails{\isOfTp{\checkEx* M C}{X}} }
+
+  \defrule[Tensor-E][sta:tensor-e]
+    { Γ \entails{\isOfTp M {\tensorTy*{A_1}{A_2}}} \\
+      Γ, x_1:A_1, x_2:A_2 \entails{\isOfTp C X} }
+    { Γ \entails{\isOfTp{\splitEx* M {x_1}{x_2} C}{X}} }
+
+  \defrule[Sum-E][sta:sum-e]
+    { Γ \entails{\isOfTp M {\sumTy*{A_1}{A_2}}} \\
+      Γ, x_1:A_1 \entails{\isOfTp {C_1} X} \\
+      Γ, x_2:A_2 \entails{\isOfTp {C_2} X} }
+    { Γ \entails{\isOfTp{\caseEx* M x C}{X}} }
+\end{mathpar}
+\caption{Statics for computations}
+\label{fig:cbpv-computations}
+\end{figure}
+
+We may further extend the CBPV language to include the following constructions,
+which are not present in the current syntax:
+
+\begin{description}
+  \item[Effects] The computation types can include all sorts of effects,
+    such as non-termination, exceptions, state, etc., we will see some of these later.
+  \item[Pure functions] We currently only have functions as computations,
+    which is usually true and is essential for adding effects,
+    but we may also consider adding pure functions as values,
+    whose applications are intended to be values, not computations.
+    Then we can even distinguish between pure and impure functions in the type system.
+  \item[Dependent type formers] A few weeks later, we will be adding dependent types
+    to the CBPV framework, which possibly includes dependent function types and dependent pairs.
+\end{description}
+
+\subsection{Dynamics}
+
+We refrain from formally describing the dynamics of CBPV in this note,
+because the standard presentation of the dynamics of CBPV uses the CK-Machine,
+which is different from our usual presentation of the semantics of type theories
+based on reductions.
+Instead, we make some informal remarks about it.
+
+The CK-Machine can be viewed as a typed version of K-Machine:
+when describing dynamics using the K-Machine, we provide the stepping relation as rules
+of the following schemas, which we will refer to as a \emph{configuration}:
+
+\begin{align*}
+  &K ▷ C && \text{Running an expression with the stacks $K$} \\
+  &K ◁ M && \text{Returning a value to the stacks $K$}
+\end{align*}
+
+In the CK-Machine, the configuration is defined using the following schema:
+\[ Γ \mid C~X_1~K~X_2 \]
+Where:
+\begin{itemize}
+\item $Γ \entails{\isOfTp C X_1}$ is the computation being evaluated,
+\item $K$ is the stack that is similar to the K-Machine (not formally defined yet),
+\item $X_2$ is the type of the result of the computation.
+\end{itemize}
+Using our previous convention, it might be more intuitive to write it like this:
+\[ K ▷ (Γ \entails{\isOfTp{C}{X_1}}):X_2 \]
+But we will stick to the former notation for consistency with the literature.
+
+The transition of the CK-Machine is defined by the following schema:
+\[ Γ \mid C~X_1~K~X_2 \stepsTo{} Γ \mid C'~X_1'~K'~X_2 \]
+Note that we fix $Γ$ and $X_2$.
+Some examples of transition rule in the CK-Machine,
+including the rules for the computation type and the function type, are listed below:
+
+\[
+\begin{array}{rllllll}
+&Γ \mid &\bndEx*{C_1}{x}{C_2}&X_1&K&X_2\\ \stepsTo{}
+&Γ \mid &C_1&\freeTy*{X_3}&(\bndEx*{-}{x}{C_2} :: K)&X_2\\
+&Γ \mid &\retEx* M&\freeTy*{X_3}&(\bndEx*{-}{x}{C} :: K)&X_2\\ \stepsTo{}
+&Γ \mid &[M/x]C&X_1&K&X_2\\
+
+&Γ \mid &\appEx* C M&X_1&K&X_2 \\ \stepsTo{}
+&Γ \mid &C&\parrTy*{A}{X_1}&(M :: K)&X_2 \\
+&Γ \mid &\lamEx* x C&\parrTy*{A}{X_1}&(M :: K)&X_2 \\ \stepsTo{}
+&Γ \mid &[M/x]C&X_1&K&X_2
+\end{array}
+\]
+
+The stack $K$ is a stack data structure in the traditional sense that can contain the following elements:
+\begin{itemize}
+\item A value $M$, which is supposed to be applied to the function being computed,
+\item A continuation $\bndEx*{-}{x}{C}$,
+\item A tag, usually represented as an element in a finite indexing set, for selection in case of sum types.
+  Since our sum type is binary, we can use a boolean value to represent the tag.
+\end{itemize}
+When the stack is empty and the computation results in an introduction form, such as $\retEx* M$,
+the machine is said to have terminated and computes to that introduction form.
+
+\subsection{Categorical semantics}
+\newcommand{\Ctx}{\mathsf{Ctx}}
+\newcommand{\Stk}{\mathsf{Stk}}
+
+Under the standard categorical interpretation of type theories,
+we may expect the value fragment of CBPV language to be interpreted as a
+bicartesian monoidal category,  i.e. with finite products and coproducts,
+which is regarded as a category of contexts of value types, denoted $\Ctx$.
+Morphisms in this category correspond to value substitutions,
+and we identify value types with contexts of length $1$.
+
+What's more interesting is the interpretation of the computation fragment.
+Instead of interpreting the terms directly, we interpret the \emph{stacks} of the CK-Machine.
+Recall that stacks are used in the following form of judgment:
+\[ Γ \mid C~X_1~K~X_2 \]
+It says that $Γ \entails{\isOfTp{C}{X_1}}$, and $K$ takes this
+computation of type $X_1$ into a computation of type $X_2$.
+This is a more natural choice of \emph{morphisms} between computation types,
+so the categorical semantics starts from the stacks, and then we interpret the type and term
+formers of the computation fragment in terms of these stacks.
+
+Since the stacks are \emph{within} value contexts, therefore they have to
+be \emph{indexed} by $\Ctx$, we denote this category as $\Stk$.
+Formally speaking, $\Stk$ is a (strict) $\Ctx$-indexed category,
+with all the base change functors being identity on objects
+(since CBPV is simply-typed after all).
+We refer to this construction as a \emph{locally $\Ctx$-indexed category}.
+
+Here are some standard facts about morphisms in $\Stk$:
+\begin{itemize}
+\item The identity morphism is the empty stack, which operationally does nothing,
+  thus composition with them satisfies the identity laws.
+\item A stack that takes $X_1$ to $X_2$ within $Γ$ is a morphism in $\Stk(X_1, X_2)$
+  in the fiber over $Γ ∈ \Ctx$.
+\item Composition of morphisms correspond to the concatenation of stacks,
+  defined by induction in the standard way, similar to the concatenation of singly linked lists in SML.
+\end{itemize}
+
+For the remaining details, such as the interpretation of computation types and the adjunction
+between $\Ctx$ and $\Stk$, we encourage the readers to refer to the writings of Paul Blain Levy.
+
+\subsection{Compiling lax to CBPV}
+Recall that the lax framework is a stratified type theory with a type former for computation types,
+using the following judgment schemas:
+\begin{align*}
+&Γ \entails{\isOfTp M A} && \text{Value typing} \\
+&Γ \entails{\retsTp E A} && \text{Computation typing} \\
+\end{align*}
+We may define an interpretation, or a \emph{compiler}, from the lax framework to CBPV.
+We describe the translation using the following syntax:
+\begin{enumerate}
+\item For value of type $A$ in lax, we define $||A||$ to be its interpretation in CBPV, which is a value type;
+\item For computation of type $A$ in lax, we define $|A|$ to be $\freeTy*{||A||}$, which is a computation type;
+\end{enumerate}
+The translation of types is defined below:
+\begin{align*}
+  ||\unitTy*|| &≝ \unitTy* \\
+  ||\prodTy*{A_1}{A_2}|| &≝ \tensorTy*{||A_1||}{||A_2||} \\
+  ||\voidTy*|| &≝ \voidTy* \\
+  ||\sumTy*{A_1}{A_2}|| &≝ \sumTy*{||A_1||}{||A_2||} \\
+  ||\arrTy*{A_1}{A_2}|| &≝ \parrTy*{||A_1||}{||A_2||} \\
+  ||\compTy*{A}|| &≝ \thunkTy*{|A|} \\
+  |A| &≝ \freeTy*{||A||}
+\end{align*}
+We extend the translation to contexts in the evident way.
+Then, we may define value interpretation $||M||$ and $|M|$ with the following typing soundness theorem in mind:
+\begin{theorem}[Soundness]
+~
+\begin{enumerate}
+\item If in lax $Γ \entails{\isOfTp M A}$, then in CBPV $||Γ|| \entails{\isOfTp{||M||}{||A||}}$;
+\item If in lax $Γ \entails{\retsTp E A}$, then in CBPV $||Γ|| \entails{\isOfTp{|E|}{|A|}}$.
+\end{enumerate}
+\end{theorem}
+The translation rule is defined using the following schema:
+\begin{align*}
+&Γ \entails{\isOfTp M A} ⇝ ||M|| \\ 
+&Γ \entails{\retsTp E A} ⇝ |E|
+\end{align*}
+We omit the full transition rules and the proof of soundness, as they are part of the homework.
+
+It is not enough to only define type-sound translation,
+we have to make sure that it is also operationally sound.
+To do so, we define a \emph{heterogeneous} exact equality, called \emph{correspondence}, between terms in the two languages:
+\begin{definition}[Correspondence]
+~
+\begin{enumerate}
+\item $M ≈ V ∈ \compTy*A$ iff $∃ E, C$ such that $M ⇓ \compTy*E$, $V ⇓ \suspEx*C$, and $E \sim C ∈ A$;
+\item $E \sim C ∈ A$ iff $∃ V, W$ such that $E \stepsTo(*) \retEx*V$, $C \stepsTo(*) \retEx*W$, and $V ≈ W ∈ A$.
+\end{enumerate}
+\end{definition}
+Then we extend this to open contexts:
+\begin{definition}
+~
+\begin{enumerate}
+\item $Γ \gg M ≈ V ∈ A$ iff $∀γ ≈ δ ∈ Γ$, $\hat{γ}(M) ≈ \hat{δ}(V) ∈ A$;
+\item $Γ \gg E \sim C ∈ A$ iff $∀γ ≈ δ ∈ Γ$, $\hat{γ}(E) \sim \hat{δ}(C) ∈ A$.
+\end{enumerate}
+\end{definition}
+And we can state the fundamental theorem usually:
+\begin{theorem}[Translation Correctness]
+~
+\begin{enumerate}
+\item If $Γ \entails{\isOfTp M A} ⇝ ||M||$, then $Γ \gg M ≈ ||M|| ∈ A$;
+\item If $Γ \entails{\retsTp E A} ⇝ |E|$, then $Γ \gg E \sim |E| ∈ A$.
+\end{enumerate}
+\end{theorem}
+We may prove it using the heterogeneous exact equality as the strengthened induction hypothesis,
+and the proof is done in homework.
+
+\end{document}
