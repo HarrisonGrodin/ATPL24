@@ -245,8 +245,8 @@ But we will stick to the former notation for consistency with the literature.
 
 The transition of the CK-Machine is defined by the following schema:
 \begin{align*}
-&Γ \mid C~X₁~K~X₂ \stepsTo(l) Γ \mid C'~X₁'~K'~X₂\\
-&Γ \mid C~X₁~K~X₂ \stepsTo(r) Γ \mid C'~X₁'~K'~X₂
+&Γ \mid C~X₁~K~X₂ \stepsTo(\text{push}) Γ \mid C'~X₁'~K'~X₂\\
+&Γ \mid C~X₁~K~X₂ \stepsTo(\text{pop}) Γ \mid C'~X₁'~K'~X₂
 \end{align*}
 Note that in the transition, we fix $Γ$ and $X₂$,
 which implicitly indicates that well-typedness of the transition implies preservation.
