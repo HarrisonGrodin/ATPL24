@@ -469,34 +469,39 @@ Note that configurations are unique up to structural congruence, so the processe
 Finally, we also have two channels \kw{stdin} and \kw{stdout} which carry data of type \kw{string}.
 
 \subsubsection{Transitions}
-We present a subset of the state transitions:
-\begin{mathpar}
-  \defrule[D-Input][dyn:input]
-  {\strut}
-  {\consEx*{s}{\cal I} \stepsTo<\sndAc*{\kw{stdin}}{\kw{s}}> {\cal I}}
+We present a subset of the state transitions in \cref{fig:io-dyn}.
+\begin{figure}[ht!]
+  \centering
+  \begin{mathpar}
+    \defrule[D-Input][dyn:input]
+    {\strut}
+    {\consEx*{s}{\cal I} \stepsTo<\sndAc*{\kw{stdin}}{\kw{s}}> {\cal I}}
 
-  \defrule[D-Output][dyn:output]
-  {\strut}
-  {{\cal O} \stepsTo<\rcvAc*{\kw{stdout}}{\kw{s}}> \consEx*{s}{\cal O}}
+    \defrule[D-Output][dyn:output]
+    {\strut}
+    {{\cal O} \stepsTo<\rcvAc*{\kw{stdout}}{\kw{s}}> \consEx*{s}{\cal O}}
 
-  \defrule[D-Print][dyn:print]
-  {\strut}
-  {\kw{print}(s) \stepsTo<\sndAc*{\kw{stdout}}{\kw{s}}> {\retEx*{\unitEx*}}}
+    \defrule[D-Print][dyn:print]
+    {\strut}
+    {\kw{print}(s) \stepsTo<\sndAc*{\kw{stdout}}{\kw{s}}> {\retEx*{\unitEx*}}}
 
-  \defrule[D-Read][dyn:read]
-  {\strut}
-  {\kw{read} \stepsTo<\rcvAc*{\kw{stdin}}{\kw{s}}> {\retEx*{s}}}
+    \defrule[D-Read][dyn:read]
+    {\strut}
+    {\kw{read} \stepsTo<\rcvAc*{\kw{stdin}}{\kw{s}}> {\retEx*{s}}}
 
-  \defrule[D-Single][dyn:single]
-  {S_1 \stepsTo<\alpha> S_1'}
-  {S_1 \parallel S_2 \stepsTo<\alpha> S_1' \parallel S_2}
+    \defrule[D-Single][dyn:single]
+    {S_1 \stepsTo<\alpha> S_1'}
+    {S_1 \parallel S_2 \stepsTo<\alpha> S_1' \parallel S_2}
 
-  \defrule[D-Par][dyn:par]
-  {S_1 \stepsTo<\alpha> S_1' \\
-    S_2 \stepsTo<\overline{\alpha}> S_2'}
-  {S_1 \parallel S_2 \stepsTo S_1' \parallel S_2'}
+    \defrule[D-Par][dyn:par]
+    {S_1 \stepsTo<\alpha> S_1' \\
+      S_2 \stepsTo<\overline{\alpha}> S_2'}
+    {S_1 \parallel S_2 \stepsTo S_1' \parallel S_2'}
 
-\end{mathpar}
+  \end{mathpar}
+  \caption{Dynamics for I/O effects}
+  \label{fig:io-dyn}
+\end{figure}
 Note that rule \ruleref{dyn:par} relies on the definition of $\overline{\alpha}$ representing the complementary action of $\alpha$. In this case, $\sndAc*{a}{s}$, the action to send $s$ over channel $a$, and $\rcvAc*{a}{s}$, the action to receive $s$ over channel $a$, are complementary to each other.
 
 The dynamics for I/O are relatively straightforward. If ${\cal I}$ is not empty and the program commands a \kw{read}, \ruleref{dyn:par} allows the overall configuration to take a step by pairing \ruleref{dyn:input} and \ruleref{dyn:read}. Similarly, if the program wishes to \kw{print}, \ruleref{dyn:output} and \ruleref{dyn:print} will apply concurrently.
@@ -504,30 +509,36 @@ The dynamics for I/O are relatively straightforward. If ${\cal I}$ is not empty 
 \ruleref{dyn:single} allows the program to take steps not pertaining to I/O according to the base CBPV dynamics. In this case $\alpha$ would be $\epsilon$, the silent action.
 
 \subsection{Equations}
-We present a few select equations:
-\begin{mathpar}
+We present a few select equations in \cref{fig:io-eq}.
+\begin{figure}[ht!]
+  \centering
+  \begin{mathpar}
 
-  \defrule[E-Print-Fun][eq:print-fun]
-  {\Gamma \entails{\isOfTp{s}{\kw{string}}} \\
-    \Gamma, \isOfTp{x}{A} \entails{\isOfTp{C}{X}}}
-  {\Gamma \entails{\seqCmd*{\kw{print}(s)}{\lamEx*{x}{C} \equiv \lamEx*{x}{\seqCmd*{\kw{print}(s)}{C}}}} : \parrTy*{A}{X}}
+    \defrule[E-Print-Fun][eq:print-fun]
+    {\Gamma \entails{\isOfTp{s}{\kw{string}}} \\
+      \Gamma, \isOfTp{x}{A} \entails{\isOfTp{C}{X}}}
+    {\Gamma \entails{\seqCmd*{\kw{print}(s)}{\lamEx*{x}{C} \equiv \lamEx*{x}{\seqCmd*{\kw{print}(s)}{C}}}} : \parrTy*{A}{X}}
 
-  \defrule[E-Read-Fun][eq:read-fun]
-  { \Gamma, \isOfTp{s}{\kw{string}}, \isOfTp{x}{A} \entails{\isOfTp{C}{X}}}
-  {\Gamma \entails{\fletEx*{\kw{read}}{s}{\lamEx*{x}{C} \equiv \lamEx*{x}{\fletEx*{\kw{read}}{s}{C}}}} : \parrTy*{A}{X}}
+    \defrule[E-Read-Fun][eq:read-fun]
+    { \Gamma, \isOfTp{s}{\kw{string}}, \isOfTp{x}{A} \entails{\isOfTp{C}{X}}}
+    {\Gamma \entails{\fletEx*{\kw{read}}{s}{\lamEx*{x}{C} \equiv \lamEx*{x}{\fletEx*{\kw{read}}{s}{C}}}} : \parrTy*{A}{X}}
 
-  \defrule[E-Print-Bind][eq:print-bind]
-  {\Gamma \entails{\isOfTp{s}{\kw{string}}} \\
-   \Gamma \entails{\isOfTp{C_1}{\freeTy{A_1}}} \\
-   \Gamma, \isOfTp{x}{A_1} \entails{\isOfTp{C_2}{X_2}}}
-  {\Gamma \entails{\fletEx*{\left( \seqCmd*{\kw{print}(s)}{C_1} \right)}{x}{C_2} \equiv \seqCmd*{\kw{print}(s)}{\fletEx*{C_1}{x}{C_2}}} : X_2}
+    \defrule[E-Print-Bind][eq:print-bind]
+    {\Gamma \entails{\isOfTp{s}{\kw{string}}} \\
+    \Gamma \entails{\isOfTp{C_1}{\freeTy{A_1}}} \\
+    \Gamma, \isOfTp{x}{A_1} \entails{\isOfTp{C_2}{X_2}}}
+    {\Gamma \entails{\fletEx*{\left( \seqCmd*{\kw{print}(s)}{C_1} \right)}{x}{C_2} \equiv \seqCmd*{\kw{print}(s)}{\fletEx*{C_1}{x}{C_2}}} : X_2}
 
-  \defrule[E-Read-Bind][eq:print-bind]
-  {\Gamma, \isOfTp{s}{\kw{string}} \entails{\isOfTp{C_1}{\freeTy{A_1}}} \\
-   \Gamma, \isOfTp{x}{A_1} \entails{\isOfTp{C_2}{X_2}}}
-  {\Gamma \entails{\fletEx*{\left( \fletEx*{\kw{read}}{s}{C_1} \right)}{x}{C_2} \equiv \fletEx*{\kw{read}}{s}{\fletEx*{C_1}{x}{C_2}}} : X_2}
+    \defrule[E-Read-Bind][eq:print-bind]
+    {\Gamma, \isOfTp{s}{\kw{string}} \entails{\isOfTp{C_1}{\freeTy{A_1}}} \\
+    \Gamma, \isOfTp{x}{A_1} \entails{\isOfTp{C_2}{X_2}}}
+    {\Gamma \entails{\fletEx*{\left( \fletEx*{\kw{read}}{s}{C_1} \right)}{x}{C_2} \equiv \fletEx*{\kw{read}}{s}{\fletEx*{C_1}{x}{C_2}}} : X_2}
 
-\end{mathpar}
+  \end{mathpar}
+  \caption{Equations for I/O effects}
+  \label{fig:io-eq}
+\end{figure}
+
 Note that rules \ruleref{eq:print-fun} and \ruleref{eq:read-fun} say that performing I/O before a function definition is equivalent to performing I/O within the function definition. This might be surprising, since one could imagine that the RHS would not be guaranteed to perform the I/O if the function is not applied. However, we will soon see how to justify this through exact equality.
 
 \subsection{Exact Equality}
@@ -596,48 +607,53 @@ We present a subset of the state transitions:
 \end{mathpar}
 
 \subsection{Equations}
-We have the following equations that allow us to ``normalize'' \kw{set} and \kw{get} commands to a sequence of \kw{get}s followed by a \kw{sets}:
+We have the following equations in \cref{fig:mutable-eq} that allow us to ``normalize'' \kw{set} and \kw{get} commands to a sequence of \kw{get}s followed by a sequence \kw{sets}:
 
-\begin{mathpar}
+\begin{figure}[ht!]
+  \centering
+  \begin{mathpar}
 
-  \defrule[E-Set-Get-Same][eq:set-get-same]
-  {\Sigma \entails{\hasTp{a}{A}} \\
-   \Gamma \entails[\Sigma]{\isOfTp{V}{A}}}
-  {\Gamma \entails[\Sigma]{\seqCmd*{\setCmd<a>{V}}{\getCmd<a>} \equiv \setCmd<a>{V}} : \freeTy{A}}
+    \defrule[E-Set-Get-Same][eq:set-get-same]
+    {\Sigma \entails{\hasTp{a}{A}} \\
+    \Gamma \entails[\Sigma]{\isOfTp{V}{A}}}
+    {\Gamma \entails[\Sigma]{\seqCmd*{\setCmd<a>{V}}{\getCmd<a>} \equiv \setCmd<a>{V}} : \freeTy{A}}
 
-  \defrule[E-Set-Get-Diff][eq:set-get-diff]
-  {\Sigma \entails{\hasTp{a}{A}} \\
-   \Sigma \entails{\hasTp{b}{B}} \\
-   \left( a \neq b \right) \\
-   \Gamma \entails[\Sigma]{\isOfTp{V}{A}}}
-  {\Gamma \entails[\Sigma]{\seqCmd*{\setCmd<a>{V}}{\getCmd<b>} \equiv \fletEx*{\getCmd<b>}{x}{\seqCmd*{\setCmd<a>{V}}}{\retCmd*{x}}} : \freeTy{B}}
+    \defrule[E-Set-Get-Diff][eq:set-get-diff]
+    {\Sigma \entails{\hasTp{a}{A}} \\
+    \Sigma \entails{\hasTp{b}{B}} \\
+    \left( a \neq b \right) \\
+    \Gamma \entails[\Sigma]{\isOfTp{V}{A}}}
+    {\Gamma \entails[\Sigma]{\seqCmd*{\setCmd<a>{V}}{\getCmd<b>} \equiv \fletEx*{\getCmd<b>}{x}{\seqCmd*{\setCmd<a>{V}}}{\retCmd*{x}}} : \freeTy{B}}
 
-  \defrule[E-Set-Set-Same][eq:set-set-same]
-  {\Sigma \entails{\hasTp{a}{A}} \\
-   \Gamma \entails[\Sigma]{\isOfTp{V}{A}} \\
-   \Gamma, \isOfTp{x}{A} \entails[\Sigma]{\isOfTp{V'}{A}}
-   }
-  {\Gamma \entails[\Sigma]{\fletEx*{\setCmd<a>{V}}{x}{\setCmd<a>{V'}} \equiv \letvEx{V}{x}{\setCmd<a>{V'}}} : \freeTy{A}}
+    \defrule[E-Set-Set-Same][eq:set-set-same]
+    {\Sigma \entails{\hasTp{a}{A}} \\
+    \Gamma \entails[\Sigma]{\isOfTp{V}{A}} \\
+    \Gamma, \isOfTp{x}{A} \entails[\Sigma]{\isOfTp{V'}{A}}
+    }
+    {\Gamma \entails[\Sigma]{\fletEx*{\setCmd<a>{V}}{x}{\setCmd<a>{V'}} \equiv \letvEx{V}{x}{\setCmd<a>{V'}}} : \freeTy{A}}
 
-  \defrule[E-Set-Set-Diff][eq:set-set-diff]
-  {\Sigma \entails{\hasTp{a}{A}} \\
-   \Sigma \entails{\hasTp{b}{B}} \\
-   \left( a \neq b \right) \\
-   \Gamma \entails[\Sigma]{\isOfTp{V}{A}} \\
-   \Gamma, \isOfTp{x}{A} \entails[\Sigma]{\isOfTp{V'}{B}}
-   }
-  {\Gamma \entails[\Sigma]{\fletEx*{\setCmd<a>{V}}{x}{\setCmd<b>{V'}} \equiv \letvEx{V}{x}{\fletEx*{\setCmd<b>{V'}}{y}{\seqCmd*{\setCmd<a>{V}}{\retCmd*{y}}}}} : \freeTy{B}}
+    \defrule[E-Set-Set-Diff][eq:set-set-diff]
+    {\Sigma \entails{\hasTp{a}{A}} \\
+    \Sigma \entails{\hasTp{b}{B}} \\
+    \left( a \neq b \right) \\
+    \Gamma \entails[\Sigma]{\isOfTp{V}{A}} \\
+    \Gamma, \isOfTp{x}{A} \entails[\Sigma]{\isOfTp{V'}{B}}
+    }
+    {\Gamma \entails[\Sigma]{\fletEx*{\setCmd<a>{V}}{x}{\setCmd<b>{V'}} \equiv \letvEx{V}{x}{\fletEx*{\setCmd<b>{V'}}{y}{\seqCmd*{\setCmd<a>{V}}{\retCmd*{y}}}}} : \freeTy{B}}
 
-  \defrule[E-Get-Set-Same][eq:get-set-same]
-  {\Sigma \entails{\hasTp{a}{A}}}
-  {\Gamma \entails[\Sigma]{\fletEx*{\getCmd<a>}{x}{\setCmd<a>{x}} \equiv \getCmd<a>} : \freeTy{A}}
+    \defrule[E-Get-Set-Same][eq:get-set-same]
+    {\Sigma \entails{\hasTp{a}{A}}}
+    {\Gamma \entails[\Sigma]{\fletEx*{\getCmd<a>}{x}{\setCmd<a>{x}} \equiv \getCmd<a>} : \freeTy{A}}
 
-  \defrule[E-Get-Get][eq:get-get]
-  {\Sigma \entails{\hasTp{a}{A}} \\
-   \Sigma \entails{\hasTp{b}{B}}}
-  {\Gamma \entails[\Sigma]{\seqCmd*{\getCmd<a>}{\getCmd<b>} \equiv \getCmd<b>} : \freeTy{B}}
+    \defrule[E-Get-Get][eq:get-get]
+    {\Sigma \entails{\hasTp{a}{A}} \\
+    \Sigma \entails{\hasTp{b}{B}}}
+    {\Gamma \entails[\Sigma]{\seqCmd*{\getCmd<a>}{\getCmd<b>} \equiv \getCmd<b>} : \freeTy{B}}
 
-\end{mathpar}
+  \end{mathpar}
+  \caption{Equations for mutable state}
+  \label{fig:mutable-eq}
+\end{figure}
 We'll see next week how to justify these equations with exact equality.
 
 
