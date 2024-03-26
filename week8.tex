@@ -295,18 +295,22 @@ the machine is said to have terminated and computes to that introduction form.
 
 Under the standard categorical interpretation of type theories,
 we may expect the value fragment of CBPV language to be interpreted as a
-\emph{locally bicartesian monoidal category} with pullbacks,
+\emph{locally bicartesian monoidal category} with pullbacks of context projections,
 where bicartesian monoidal means it has finite products and coproducts.
 
 This category is regarded as a category of contexts of value types, denoted $\Ctx$.
 Morphisms in this category correspond to value substitution objects,
 and we identify value types with contexts of length $1$.
+In other words, we treat this category of context as \emph{democratic}
+in the sense that all types correspond to a context formed by extending the terminal context.
 
 Rationale for the construction:
 \begin{itemize}
-\item We require pullbacks to interpret the operation that lifts a substitution object into a substitution functor.
+\item We require pullbacks of context projections to interpret the operation that lifts a substitution object into a substitution functor.
 \item We require bicartesian monoidal structure to interpret the product and sum types.
   Since these constructions are within a context, we need them to be local.
+\item Since we identify contexts with types, we don't use the word \emph{display maps}
+  and instead we use context projections when we talk about the pullbacks.
 \end{itemize}
 
 What's more interesting is the interpretation of the computation fragment.
