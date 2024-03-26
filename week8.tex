@@ -10,6 +10,9 @@
 \newunicodechar{∀}{\ensuremath{\mathnormal\forall}}
 \newunicodechar{∃}{\ensuremath{\mathnormal\exists}}
 \newunicodechar{Γ}{\ensuremath{\mathnormal\Gamma}}
+\newunicodechar{∈}{\ensuremath{\mathrel\in}}
+\newunicodechar{▷}{\ensuremath{\mathrel\vartriangleright}}
+\newunicodechar{◁}{\ensuremath{\mathrel\vartriangleleft}}
 
 \title{15-791 ATPL \\ Week 8 Notes}
 \author{Tesla Zhang, Jason Yao}
@@ -192,30 +195,96 @@ which are not present in the current syntax:
     to the CBPV framework, which possibly includes dependent function types and dependent pairs.
 \end{description}
 
-\begin{remark}
-We refrain from discussing the dynamics of CBPV in this note,
+\subsection{Dynamics}
+
+We refrain from formally describing the dynamics of CBPV in this note,
 because the standard presentation of the dynamics of CBPV uses the CK-Machine,
 which is different from our usual presentation of the semantics of type theories
 based on reductions.
-\end{remark}
+Instead, we make some informal remarks about it.
+
+The CK-Machine can be viewed as a typed version of K-Machine:
+when describing dynamics using the K-Machine, we provide the stepping relation as rules
+of the following schema, which we will refer to as a \emph{configuration}:
+
+\begin{align*}
+  &K ▷ C && \text{Running an expression with the stacks $K$} \\
+  &K ◁ M && \text{Returning a value to the stacks $K$}
+\end{align*}
+
+In the CK-Machine, the configuration is defined using the following schema:
+\[ Γ \mid C~X_1~K~X_2 \]
+Where:
+\begin{itemize}
+\item $Γ \entails{\isOfTp C X_1}$ is the computation being evaluated,
+\item $K$ is the stack that is similar to the K-Machine (not formally defined yet),
+\item $X_2$ is the type of the result of the computation.
+\end{itemize}
+Using our previous convention, it might be more intuitive to write it like this:
+\[ K ▷ (Γ \entails{\isOfTp{C}{X_1}}):X_2 \]
+
+But we will stick to the former notation for consistency with the literature.
+Some examples of transition rule in the CK-Machine,
+including the rules for the computation type and the function type, are listed below:
+
+\[
+\begin{array}{rllllll}
+&Γ \mid &\bndEx*{C_1}{x}{C_2}&X_1&K&X_2\\ \stepsTo{}
+&Γ \mid &C_1&\freeTy*{X_3}&(\bndEx*{-}{x}{C_2} :: K)&X_2\\
+&Γ \mid &\retEx* M&\freeTy*{X_3}&(\bndEx*{-}{x}{C} :: K)&X_2\\ \stepsTo{}
+&Γ \mid &[M/x]C&X_1&K&X_2\\
+
+&Γ \mid &\appEx* C M&X_1&K&X_2 \\ \stepsTo{}
+&Γ \mid &C&\parrTy*{A}{X_1}&(M :: K)&X_2 \\
+&Γ \mid &\lamEx* x C&\parrTy*{A}{X_1}&(M :: K)&X_2 \\ \stepsTo{}
+&Γ \mid &[M/x]C&X_1&K&X_2
+\end{array}
+\]
+
+The stack $K$ is a stack data structure in the traditional sense that can contain the following elements:
+\begin{itemize}
+\item A value $M$, which is supposed to be applied to the function being computed,
+\item A continuation $\bndEx*{-}{x}{C}$,
+\item A tag, usually represented as an element in a finite indexing set, for selection in case of sum types.
+  Since our sum type is binary, we can use a boolean value to represent the tag.
+\end{itemize}
 
 \subsection{Categorical semantics}
 \newcommand{\Ctx}{\mathsf{Ctx}}
-\newcommand{\CatComp}{\mathsf{Comp}}
+\newcommand{\Stk}{\mathsf{Stk}}
 
 Under the standard categorical interpretation of type theories,
-we may interpret the CBPV language as follows:
+we may expect the value fragment of CBPV language to be interpreted as a
+bicartesian monoidal category,  i.e. with finite products and coproducts,
+which is regarded as a category of contexts of value types, denoted $\Ctx$.
+Morphisms in this category correspond to value substitutions,
+and we identify value types with contexts of length $1$.
 
+What's more interesting is the interpretation of the computation fragment.
+Instead of interpreting the terms directly, we interpret the \emph{stacks} of the CK-Machine.
+Recall that stacks are used in the following form of judgment:
+\[ Γ \mid C~X_1~K~X_2 \]
+It says that $Γ \entails{\isOfTp{C}{X_1}}$, and $K$ takes this computation of $X_1$ into a computation of $X_2$.
+This is a more natural choice of \emph{morphisms} between computation types.
+
+Since the stacks are \emph{within} value contexts, therefore they have to
+be \emph{indexed} by $\Ctx$, we denote this category as $\Stk$.
+Formally speaking, $\Stk$ is a (strict) $\Ctx$-indexed category,
+with all the base change functors being identity on objects
+(since CBPV is simply-typed after all).
+
+Here are some standard facts about morphisms in $\Stk$:
 \begin{itemize}
-\item We interpret the category of context of value types, $\Ctx$,
-  as a bicartesian monoidal category, i.e. with finite products and coproducts.
-  Morphisms in this category correspond to value substitutions,
-  and we identify value types with contexts of length $1$.
-\item The judgment for computations uses value contexts, therefore they have to
-  be \emph{indexed} by $\Ctx$, we denote it as $\CatComp$.
-  Formally speaking, $\CatComp$ are (strict) $\Ctx$-indexed categories,
-  with all the base change functors being identity on objects.
+\item The identity morphism is the empty stack, which operationally does nothing,
+  thus composition with them satisfies the identity laws.
+\item A stack that takes $X_1$ to $X_2$ within $Γ$ is a morphism in $\Stk(X_1, X_2)$
+  in the fiber over $Γ ∈ \Ctx$.
+\item Composition of morphisms correspond to the concatenation of stacks,
+  defined by induction in the standard way.
 \end{itemize}
+
+For the remaining details, such as the interpretation of computation types and the adjunction
+between $\Ctx$ and $\Stk$, we encourage the readers to refer to the writings of Paul Blain Levy.
 
 \subsection{Compiling lax to CBPV}
 
