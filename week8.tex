@@ -271,13 +271,12 @@ as a short-hand for
 \[Γ \mid C~X~K~X'\]
 and the rules are listed below:
 
-\todo{consider swapping $X_1$ and $X_2$ for the first rule to match with $C_1$ and $C_2$?}
 \[
 \begin{array}{|rlll|} \hline
-&\bndEx*{C₁}{x}{C₂}&X₁&K\\ \stepsTo(\text{push})
-&C₁&\freeTy*{X₂}&(\bndEx*{-}{x}{C₂} :: K)\\ \hline
-&\retEx* M&\freeTy*{X₂}&(\bndEx* - x C :: K)\\ \stepsTo(\text{pop})
-&[M/x]C&X₁&K\\ \hline
+&\bndEx*{C₁}{x}{C₂}&X₂&K\\ \stepsTo(\text{push})
+&C₁&\freeTy*{X₁}&(\bndEx*{-}{x}{C₂} :: K)\\ \hline
+&\retEx*{M₁}&\freeTy*{X₁}&(\bndEx*{-}{x}{C₂} :: K)\\ \stepsTo(\text{pop})
+&[M₁/x]C₂&X₂&K\\ \hline
 
 &\appEx* C M&X&K \\ \stepsTo(\text{push})
 &C&\parrTy*{A}{X}&(M :: K) \\ \hline
@@ -300,7 +299,8 @@ the machine is said to have terminated and computes to that introduction form.
 \newcommand{\Ctx}{\mathsf{Ctx}}
 \newcommand{\Stk}{\mathsf{Stk}}
 
-\todo{Idk category theory and assume many people in class also don't, maybe add a note to skip to the next section?}
+{\bf Note:} This section requires some knowledge of category theory and was not presented in lecture, so feel free to skip to the next section if you're not familiar with it.
+
 Under the standard categorical interpretation of type theories,
 we may expect the value fragment of CBPV language to be interpreted as a
 \emph{locally bicartesian monoidal category} with pullbacks of context projections,
@@ -524,18 +524,18 @@ We present a few select equations in \cref{fig:io-eq}.
 
     \defrule[E-Read-Fun][eq:read-fun]
     { \Gamma, \isOfTp{s}{\kw{string}}, \isOfTp{x}{A} \entails{\isOfTp{C}{X}}}
-    {\Gamma \entails{\fletEx*{\kw{read}}{s}{\lamEx*{x}{C} \equiv \lamEx*{x}{\fletEx*{\kw{read}}{s}{C}}}} : \parrTy*{A}{X}}
+    {\Gamma \entails{\bndEx*{\kw{read}}{s}{\lamEx*{x}{C}} \equiv \lamEx*{x}{\bndEx*{\kw{read}}{s}{C}}} : \parrTy*{A}{X}}
 
     \defrule[E-Print-Bind][eq:print-bind]
     {\Gamma \entails{\isOfTp{s}{\kw{string}}} \\
     \Gamma \entails{\isOfTp{C_1}{\freeTy{A_1}}} \\
     \Gamma, \isOfTp{x}{A_1} \entails{\isOfTp{C_2}{X_2}}}
-    {\Gamma \entails{\fletEx*{\left( \seqCmd*{\kw{print}(s)}{C_1} \right)}{x}{C_2} \equiv \seqCmd*{\kw{print}(s)}{\fletEx*{C_1}{x}{C_2}}} : X_2}
+    {\Gamma \entails{\bndEx*{\left( \seqCmd*{\kw{print}(s)}{C_1} \right)}{x}{C_2} \equiv \seqCmd*{\kw{print}(s)}{\bndEx*{C_1}{x}{C_2}}} : X_2}
 
     \defrule[E-Read-Bind][eq:print-bind]
     {\Gamma, \isOfTp{s}{\kw{string}} \entails{\isOfTp{C_1}{\freeTy{A_1}}} \\
     \Gamma, \isOfTp{x}{A_1} \entails{\isOfTp{C_2}{X_2}}}
-    {\Gamma \entails{\fletEx*{\left( \fletEx*{\kw{read}}{s}{C_1} \right)}{x}{C_2} \equiv \fletEx*{\kw{read}}{s}{\fletEx*{C_1}{x}{C_2}}} : X_2}
+    {\Gamma \entails{\bndEx*{\left( \bndEx*{\kw{read}}{s}{C_1} \right)}{x}{C_2} \equiv \bndEx*{\kw{read}}{s}{\bndEx*{C_1}{x}{C_2}}} : X_2}
 
   \end{mathpar}
   \caption{Equations for I/O effects}
@@ -611,7 +611,7 @@ We present a subset of the state transitions:
 
 \subsection{Equations}
 We have the following equations in \cref{fig:mutable-eq}. For simplicity, we define 
-\[\letvEx{V}{x}{C} \triangleq \fletEx*{\retCmd*{V}}{x}{C}\]
+\[\letvEx{V}{x}{C} \triangleq \bndEx*{\retCmd*{V}}{x}{C}\]
 
 Note that many of the equations show how to ``swap'' a \kw{get} before a \kw{set} or remove the \kw{get} entirely. Combined with the rest of the equations, this allow us to ``normalize'' \kw{set} and \kw{get} commands to a sequence of \kw{get}s followed by a sequence \kw{sets}.
 
@@ -629,14 +629,14 @@ Note that many of the equations show how to ``swap'' a \kw{get} before a \kw{set
     \Sigma \entails{\hasTp{b}{B}} \\
     \left( a \neq b \right) \\
     \Gamma \entails[\Sigma]{\isOfTp{V}{A}}}
-    {\Gamma \entails[\Sigma]{\seqCmd*{\setCmd<a>{V}}{\getCmd<b>} \equiv \fletEx*{\getCmd<b>}{x}{\seqCmd*{\setCmd<a>{V}}}{\retCmd*{x}}} : \freeTy{B}}
+    {\Gamma \entails[\Sigma]{\seqCmd*{\setCmd<a>{V}}{\getCmd<b>} \equiv \bndEx*{\getCmd<b>}{x}{\seqCmd*{\setCmd<a>{V}}{\retCmd*{x}}}} : \freeTy{B}}
 
     \defrule[E-Set-Set-Same][eq:set-set-same]
     {\Sigma \entails{\hasTp{a}{A}} \\
     \Gamma \entails[\Sigma]{\isOfTp{V}{A}} \\
     \Gamma, \isOfTp{x}{A} \entails[\Sigma]{\isOfTp{V'}{A}}
     }
-    {\Gamma \entails[\Sigma]{\fletEx*{\setCmd<a>{V}}{x}{\setCmd<a>{V'}} \equiv \letvEx{V}{x}{\setCmd<a>{V'}}} : \freeTy{A}}
+    {\Gamma \entails[\Sigma]{\bndEx*{\setCmd<a>{V}}{x}{\setCmd<a>{V'}} \equiv \letvEx{V}{x}{\setCmd<a>{V'}}} : \freeTy{A}}
 
     \defrule[E-Set-Set-Diff][eq:set-set-diff]
     {\Sigma \entails{\hasTp{a}{A}} \\
@@ -645,11 +645,11 @@ Note that many of the equations show how to ``swap'' a \kw{get} before a \kw{set
     \Gamma \entails[\Sigma]{\isOfTp{V}{A}} \\
     \Gamma, \isOfTp{x}{A} \entails[\Sigma]{\isOfTp{V'}{B}}
     }
-    {\Gamma \entails[\Sigma]{\fletEx*{\setCmd<a>{V}}{x}{\setCmd<b>{V'}} \equiv \letvEx{V}{x}{\fletEx*{\setCmd<b>{V'}}{y}{\seqCmd*{\setCmd<a>{V}}{\retCmd*{y}}}}} : \freeTy{B}}
+    {\Gamma \entails[\Sigma]{\bndEx*{\setCmd<a>{V}}{x}{\setCmd<b>{V'}} \equiv \letvEx{V}{x}{\bndEx*{\setCmd<b>{V'}}{y}{\seqCmd*{\setCmd<a>{V}}{\retCmd*{y}}}}} : \freeTy{B}}
 
     \defrule[E-Get-Set-Same][eq:get-set-same]
     {\Sigma \entails{\hasTp{a}{A}}}
-    {\Gamma \entails[\Sigma]{\fletEx*{\getCmd<a>}{x}{\setCmd<a>{x}} \equiv \getCmd<a>} : \freeTy{A}}
+    {\Gamma \entails[\Sigma]{\bndEx*{\getCmd<a>}{x}{\setCmd<a>{x}} \equiv \getCmd<a>} : \freeTy{A}}
 
     \defrule[E-Get-Get][eq:get-get]
     {\Sigma \entails{\hasTp{a}{A}} \\
