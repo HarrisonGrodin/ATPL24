@@ -60,7 +60,7 @@ The syntax of types in CBPV is given by the following grammar:
 
 \[
   \begin{array}{rcl}
-    \text{Computation types} \quad & X ::= & \prodTy*{X₁}{X₂} \mid \parrTy*{A₁}{X₂} \mid \freeTy*{A} \\
+    \text{Computation types} \quad & X ::= & \prodTy*{X₁}{X₂} \mid \parrTy*{A₁}{X₂} \mid \freeTy*{A}                \\
     \text{Value types} \quad       & A ::= & \topTy* \mid \tensorTy*{A₁}{A₂} \mid \sumTy*{A₁}{A₂} \mid \thunkTy*{X} \\
   \end{array}
 \]
@@ -74,11 +74,11 @@ The syntax for terms is given by the following grammar:
 \[
   \begin{array}{rcl}
     \text{Values} \quad M, V ::=
-      && x \mid \unitEx* \mid \tensorEx*{M₁}{M₂} \mid \injEx*<1>{M} \mid \injEx*<2>{M} \mid \suspEx*{C} \\
+     &  & x \mid \unitEx* \mid \tensorEx*{M₁}{M₂} \mid \injEx*<1>{M} \mid \injEx*<2>{M} \mid \suspEx*{C}        \\
     \text{Computations} \quad C ::=
-      && \retEx*{M} \mid \bndEx*{C₁}{x}{C₂} \mid \pairEx*{C₁}{C₂} \mid \projEx*<1>{C} \mid \projEx*<2>{C} \mid \\
-      && \lamEx*{x}{C} \mid \appEx*{C}{M} \mid \forceEx*{M} \mid \checkEx*{M}{C} \mid \\
-      && \splitEx*{M}{x₁}{x₂}{C} \mid \caseEx* M x C
+     &  & \retEx*{M} \mid \bndEx*{C₁}{x}{C₂} \mid \pairEx*{C₁}{C₂} \mid \projEx*<1>{C} \mid \projEx*<2>{C} \mid \\
+     &  & \lamEx*{x}{C} \mid \appEx*{C}{M} \mid \forceEx*{M} \mid \checkEx*{M}{C} \mid                          \\
+     &  & \splitEx*{M}{x₁}{x₂}{C} \mid \caseEx* M x C
   \end{array}
 \]
 
@@ -95,8 +95,8 @@ and the value introduction due to the presence of another product type taking up
 The static semantics of CBPV is defined by the following judgment schemas:
 
 \begin{align*}
-  &Γ \entails{\isOfTp M A} && \quad \text{Value typing} \\
-  &Γ \entails{\isOfTp C X} && \quad \text{Computation typing}
+   & Γ \entails{\isOfTp M A} &  & \quad \text{Value typing}       \\
+   & Γ \entails{\isOfTp C X} &  & \quad \text{Computation typing}
 \end{align*}
 
 Similar to the lax framework, the judgment form is stratified into two categories,
@@ -108,95 +108,95 @@ The rules for values are given by the typing rules in~\cref{fig:cbpv-values},
 which only includes identity and the introduction of value types.
 
 \begin{figure}[ht!]
-\centering
-\begin{mathpar}
-  \defrule[Var][sta:var]
+  \centering
+  \begin{mathpar}
+    \defrule[Var][sta:var]
     { \strut }
     { Γ, x:A \entails{\isOfTp x A} }
 
-  \defrule[Unit-I][sta:unit-i]
+    \defrule[Unit-I][sta:unit-i]
     { \strut }
     { Γ \entails{\isOfTp{\unitEx*}{\topTy*}} }
 
-  \defrule[Tensor-I][sta:tensor-i]
+    \defrule[Tensor-I][sta:tensor-i]
     { Γ \entails{\isOfTp {M₁} {A₁}} \\ Γ \entails{\isOfTp {M₂} {A₂}} }
     { Γ \entails{\isOfTp{\tensorEx*{M₁}{M₂}}{\tensorTy*{A₁}{A₂}}} }
 
-  \defrule[Sum-I1][sta:sum-i1]
+    \defrule[Sum-I1][sta:sum-i1]
     { Γ \entails{\isOfTp M {A₁}} }
     { Γ \entails{\isOfTp{\injEx*<1> M}{\sumTy*{A₁}{A₂}}} }
 
-  \defrule[Sum-I2][sta:sum-i2]
+    \defrule[Sum-I2][sta:sum-i2]
     { Γ \entails{\isOfTp M {A₂}} }
     { Γ \entails{\isOfTp{\injEx*<2> M}{\sumTy*{A₁}{A₂}}} }
 
-  \defrule[Thunk-I][sta:thunk-i]
+    \defrule[Thunk-I][sta:thunk-i]
     { Γ \entails{\isOfTp C X} }
     { Γ \entails{\isOfTp{\suspEx* C}{\thunkTy* X}} }
-\end{mathpar}
-\caption{Statics for values}
-\label{fig:cbpv-values}
+  \end{mathpar}
+  \caption{Statics for values}
+  \label{fig:cbpv-values}
 \end{figure}
 
 The rules for computations are given by the typing rules in~\cref{fig:cbpv-computations},
 which includes the elimination of value types and all the rules of computation types.
 
 \begin{figure}[ht!]
-\centering
-\begin{mathpar}
-  \defrule[Thunk-E][sta:thunk-e]
+  \centering
+  \begin{mathpar}
+    \defrule[Thunk-E][sta:thunk-e]
     { Γ \entails{\isOfTp M {\thunkTy* X}} }
     { Γ \entails{\isOfTp{\forceEx* M}{X}} }
 
-  \defrule[Free-I][sta:free-i]
+    \defrule[Free-I][sta:free-i]
     { Γ \entails{\isOfTp M A} }
     { Γ \entails{\isOfTp{\retEx* M}{\freeTy* A}} }
 
-  \defrule[Free-E][sta:free-e]
+    \defrule[Free-E][sta:free-e]
     { Γ \entails{\isOfTp {C₁} {\freeTy*{A₁}}} \\
       Γ, x:A₁ \entails{\isOfTp {C₂}{X₂}} }
     { Γ \entails{\isOfTp{\bndEx*{C₁}{x}{C₂}}{X₂}} }
 
-  \defrule[Prod-I][sta:prod-i]
+    \defrule[Prod-I][sta:prod-i]
     { Γ \entails{\isOfTp {C₁} {X₁}} \\
       Γ \entails{\isOfTp {C₂} {X₂}} }
     { Γ \entails{\isOfTp{\pairEx*{C₁}{C₂}}{\prodTy*{X₁}{X₂}}} }
 
-  \defrule[Prod-E1][sta:prod-e1]
+    \defrule[Prod-E1][sta:prod-e1]
     { Γ \entails{\isOfTp C {\prodTy*{X₁}{X₂}}} }
     { Γ \entails{\isOfTp{\projEx*<1> C}{X₁}} }
 
-  \defrule[Prod-E2][sta:prod-e2]
+    \defrule[Prod-E2][sta:prod-e2]
     { Γ \entails{\isOfTp C {\prodTy*{X₁}{X₂}}} }
     { Γ \entails{\isOfTp{\projEx*<2> C}{X₂}} }
 
-  \defrule[Parr-I][sta:parr-i]
+    \defrule[Parr-I][sta:parr-i]
     { Γ, x:A \entails{\isOfTp C X} }
     { Γ \entails{\isOfTp{\lamEx* x C}{\parrTy* A X}} }
 
-  \defrule[Parr-E][sta:parr-e]
+    \defrule[Parr-E][sta:parr-e]
     { Γ \entails{\isOfTp C {\parrTy* A X}} \\
       Γ \entails{\isOfTp M A} }
     { Γ \entails{\isOfTp{\appEx* C M}{X}} }
 
-  \defrule[Unit-E][sta:unit-e]
+    \defrule[Unit-E][sta:unit-e]
     { Γ \entails{\isOfTp M \topTy*} \\
       Γ \entails{\isOfTp C X} }
     { Γ \entails{\isOfTp{\checkEx* M C}{X}} }
 
-  \defrule[Tensor-E][sta:tensor-e]
+    \defrule[Tensor-E][sta:tensor-e]
     { Γ \entails{\isOfTp M {\tensorTy*{A₁}{A₂}}} \\
       Γ, x₁:A₁, x₂:A₂ \entails{\isOfTp C X} }
     { Γ \entails{\isOfTp{\splitEx* M {x₁}{x₂} C}{X}} }
 
-  \defrule[Sum-E][sta:sum-e]
+    \defrule[Sum-E][sta:sum-e]
     { Γ \entails{\isOfTp M {\sumTy*{A₁}{A₂}}} \\
       Γ, x₁:A₁ \entails{\isOfTp {C₁} X} \\
       Γ, x₂:A₂ \entails{\isOfTp {C₂} X} }
     { Γ \entails{\isOfTp{\caseEx* M x C}{X}} }
-\end{mathpar}
-\caption{Statics for computations}
-\label{fig:cbpv-computations}
+  \end{mathpar}
+  \caption{Statics for computations}
+  \label{fig:cbpv-computations}
 \end{figure}
 
 We may further extend the CBPV language to include the following constructions,
@@ -227,43 +227,43 @@ when describing dynamics using the K-Machine, we provide the stepping relation a
 of the following schemas, which we will refer to as a \emph{configuration}:
 
 \begin{align*}
-  &K ▷ C && \text{Running an expression with the stacks $K$} \\
-  &K ◁ M && \text{Returning a value to the stacks $K$}
+   & K ▷ C &  & \text{Running an expression with the stacks $K$} \\
+   & K ◁ M &  & \text{Returning a value to the stacks $K$}
 \end{align*}
 
 In the CK-Machine, the configuration is defined using the following schema:
 \[ Γ \mid C~X₁~K~X₂ \]
 Where:
 \begin{itemize}
-\item $Γ \entails{\isOfTp{C}{X₁}}$ is the computation being evaluated,
-\item $K$ is the stack that is similar to the K-Machine (not formally defined yet),
-\item $X₂$ is the type of the result of the computation.
+  \item $Γ \entails{\isOfTp{C}{X₁}}$ is the computation being evaluated,
+  \item $K$ is the stack that is similar to the K-Machine (not formally defined yet),
+  \item $X₂$ is the type of the result of the computation.
 \end{itemize}
 Using our previous convention, it might be more intuitive to write it like one of these,
 depending on the direction of the transition:
 \begin{align*}
-  K &▷ (Γ \entails{\isOfTp{C}{X₁}}):X₂\\
-  K &◁ (Γ \entails{\isOfTp{C}{X₁}}):X₂
+  K & ▷ (Γ \entails{\isOfTp{C}{X₁}}):X₂ \\
+  K & ◁ (Γ \entails{\isOfTp{C}{X₁}}):X₂
 \end{align*}
 But we will stick to the former notation for consistency with the literature.
 
 The transition of the CK-Machine is defined by the following schema:
 \begin{align*}
-&Γ \mid C~X₁~K~X₂ \stepsTo(\text{push}) Γ \mid C'~X₁'~K'~X₂\\
-&Γ \mid C~X₁~K~X₂ \stepsTo(\text{pop}) Γ \mid C'~X₁'~K'~X₂
+   & Γ \mid C~X₁~K~X₂ \stepsTo(\text{push}) Γ \mid C'~X₁'~K'~X₂ \\
+   & Γ \mid C~X₁~K~X₂ \stepsTo(\text{pop}) Γ \mid C'~X₁'~K'~X₂
 \end{align*}
 Note that in the transition, we fix $Γ$ and $X₂$,
 which implicitly indicates that well-typedness of the transition implies preservation.
 
 \begin{remark}
-In K-Machine, the direction of the transition is indicated in the configuration:
-if we expect the expression to reduce, we write $K ▷ C$, otherwise we write $K ◁ M$.
+  In K-Machine, the direction of the transition is indicated in the configuration:
+  if we expect the expression to reduce, we write $K ▷ C$, otherwise we write $K ◁ M$.
 
-In the CK-Machine, the direction of the transition is indicated in the transition rule:
-if we're pushing frames into the stack, we use $\stepsTo(\text{push})$,
-and if we're popping frames out of the stack, we use $\stepsTo(\text{pop})$.
+  In the CK-Machine, the direction of the transition is indicated in the transition rule:
+  if we're pushing frames into the stack, we use $\stepsTo(\text{push})$,
+  and if we're popping frames out of the stack, we use $\stepsTo(\text{pop})$.
 
-Pushing in the CK-Machine corresponds to elimination, and popping corresponds to introduction.
+  Pushing in the CK-Machine corresponds to elimination, and popping corresponds to introduction.
 \end{remark}
 
 Some examples of transition rule in the CK-Machine,
@@ -276,25 +276,25 @@ as a short-hand for
 and the rules are listed below:
 
 \[
-\begin{array}{|rlll|} \hline
-&\bndEx*{C₁}{x}{C₂}&X₂&K\\ \stepsTo(\text{push})
-&C₁&\freeTy*{X₁}&(\bndEx*{-}{x}{C₂} :: K)\\ \hline
-&\retEx*{M₁}&\freeTy*{X₁}&(\bndEx*{-}{x}{C₂} :: K)\\ \stepsTo(\text{pop})
-&[M₁/x]C₂&X₂&K\\ \hline
+  \begin{array}{|rlll|} \hline
+     & \bndEx*{C₁}{x}{C₂} & X₂             & K                        \\ \stepsTo(\text{push})
+     & C₁                 & \freeTy*{X₁}   & (\bndEx*{-}{x}{C₂} :: K) \\ \hline
+     & \retEx*{M₁}        & \freeTy*{X₁}   & (\bndEx*{-}{x}{C₂} :: K) \\ \stepsTo(\text{pop})
+     & [M₁/x]C₂           & X₂             & K                        \\ \hline
 
-&\appEx* C M&X&K \\ \stepsTo(\text{push})
-&C&\parrTy*{A}{X}&(M :: K) \\ \hline
-&\lamEx* x C&\parrTy*{A}{X}&(M :: K) \\ \stepsTo(\text{pop})
-&[M/x]C&X&K \\ \hline
-\end{array}
+     & \appEx* C M        & X              & K                        \\ \stepsTo(\text{push})
+     & C                  & \parrTy*{A}{X} & (M :: K)                 \\ \hline
+     & \lamEx* x C        & \parrTy*{A}{X} & (M :: K)                 \\ \stepsTo(\text{pop})
+     & [M/x]C             & X              & K                        \\ \hline
+  \end{array}
 \]
 
 The stack $K$ is a stack data structure in the traditional sense that can contain the following elements:
 \begin{itemize}
-\item A value $M$, which is supposed to be applied to the function being computed,
-\item A continuation $\bndEx*{-}{x}{C}$,
-\item A tag, usually represented as an element in a finite indexing set, for selection in case of sum types.
-  Since our sum type is binary, we can use a boolean value to represent the tag.
+  \item A value $M$, which is supposed to be applied to the function being computed,
+  \item A continuation $\bndEx*{-}{x}{C}$,
+  \item A tag, usually represented as an element in a finite indexing set, for selection in case of sum types.
+        Since our sum type is binary, we can use a boolean value to represent the tag.
 \end{itemize}
 When the stack is empty and the computation results in an introduction form, such as $\retEx* M$,
 the machine is said to have terminated and computes to that introduction form.
@@ -318,17 +318,17 @@ in the sense that all types correspond to a context formed by extending the term
 
 Rationale for the construction:
 \begin{itemize}
-\item We require pullbacks of context projections to interpret the operation that lifts a substitution object into a substitution functor.
-\item We require bicartesian monoidal structure to interpret the product and sum types.
-  Since these constructions are within a context, we need them to be local.
-\item Since we identify contexts with types, we don't use the word \emph{display maps}
-  and instead we use context projections when we talk about the pullbacks.
+  \item We require pullbacks of context projections to interpret the operation that lifts a substitution object into a substitution functor.
+  \item We require bicartesian monoidal structure to interpret the product and sum types.
+        Since these constructions are within a context, we need them to be local.
+  \item Since we identify contexts with types, we don't use the word \emph{display maps}
+        and instead we use context projections when we talk about the pullbacks.
 \end{itemize}
 
 What's more interesting is the interpretation of the computation fragment.
 Instead of interpreting the terms directly, we interpret the
 \emph{stacks}\footnote{The name \emph{stack} here is not to be confused with
-stacks in higher category theory.} of the CK-Machine.
+  stacks in higher category theory.} of the CK-Machine.
 Recall that stacks are used in the following form of judgment:
 \[ Γ \mid C~X₁~K~X₂ \]
 It says that $Γ \entails{\isOfTp{C}{X₁}}$, and $K$ takes this
@@ -346,25 +346,23 @@ We refer to this construction as a \emph{locally $\Ctx$-indexed category}.
 
 Here are some standard facts about morphisms in $\Stk$:
 \begin{itemize}
-\item The identity morphism is the empty stack, which operationally does nothing,
-  thus composition with them satisfies the identity laws.
-\item The stack $K$ in $Γ \mid -~X₁~K~X₂$, which takes $X₁$ to $X₂$ within $Γ$,
-  is a morphism in $\Stk(X₁, X₂)$ in the fiber over $Γ ∈ \Ctx$.
-\item Composition of morphisms correspond to the concatenation of stacks,
-  defined by induction in the standard way, similar to the concatenation of singly linked lists in SML.
+  \item The identity morphism is the empty stack, which operationally does nothing,
+        thus composition with them satisfies the identity laws.
+  \item The stack $K$ in $Γ \mid -~X₁~K~X₂$, which takes $X₁$ to $X₂$ within $Γ$,
+        is a morphism in $\Stk(X₁, X₂)$ in the fiber over $Γ ∈ \Ctx$.
+  \item Composition of morphisms correspond to the concatenation of stacks,
+        defined by induction in the standard way, similar to the concatenation of singly linked lists in SML.
 \end{itemize}
 
 Here are some standard facts about base change in $\Stk$:
 \begin{itemize}
-\item
-Since morphisms in $\Ctx$ induce substitutions, we already have substitution for value types directly,
-and substitutions for computation types are induced by the fact that $\Stk$ is an indexed category.
-\item
-The fact that base change of $\Stk$ is identity on objects means that the substitution functor does not change
-the type, which corresponds to the fact that CBPV is simply-typed.
-However, they \emph{do} change the stack, so they are not identity on morphisms, evidently.
-\item Strictness of the indexed category is essentially to avoid some
-technical issues regarding substitution up to isomorphism.
+  \item Since morphisms in $\Ctx$ induce substitutions, we already have substitution for value types directly,
+        and substitutions for computation types are induced by the fact that $\Stk$ is an indexed category.
+  \item The fact that base change of $\Stk$ is identity on objects means that the substitution functor does not change
+        the type, which corresponds to the fact that CBPV is simply-typed.
+        However, they \emph{do} change the stack, so they are not identity on morphisms, evidently.
+  \item Strictness of the indexed category is essentially to avoid some
+        technical issues regarding substitution up to isomorphism.
 \end{itemize}
 
 For the remaining details, such as the interpretation of computation types and the adjunction
@@ -374,38 +372,38 @@ between $\Ctx$ and $\Stk$, we encourage the readers to refer to the writings of 
 Recall that the lax framework is a stratified type theory with a type former for computation types,
 using the following judgment schemas:
 \begin{align*}
-&Γ \entails{\isOfTp M A} && \text{Value typing} \\
-&Γ \entails{\retsTp E A} && \text{Computation typing} \\
+   & Γ \entails{\isOfTp M A} &  & \text{Value typing}       \\
+   & Γ \entails{\retsTp E A} &  & \text{Computation typing} \\
 \end{align*}
 We may define an interpretation, or a \emph{compiler}, from the lax framework to CBPV.
 We describe the translation using the following syntax:
 \begin{enumerate}
-\item For value of type $A$ in lax, we define $||A||$ to be its interpretation in CBPV, which is a value type;
-\item For computation of type $A$ in lax, we define $|A|$ to be $\freeTy*{||A||}$, which is a computation type;
+  \item For value of type $A$ in lax, we define $||A||$ to be its interpretation in CBPV, which is a value type;
+  \item For computation of type $A$ in lax, we define $|A|$ to be $\freeTy*{||A||}$, which is a computation type;
 \end{enumerate}
 The translation of types is defined below:
 \begin{align*}
-  ||\unitTy*|| &≝ \unitTy* \\
-  ||\prodTy*{A₁}{A₂}|| &≝ \tensorTy*{||A₁||}{||A₂||} \\
-  ||\voidTy*|| &≝ \voidTy* \\
-  ||\sumTy*{A₁}{A₂}|| &≝ \sumTy*{||A₁||}{||A₂||} \\
-  ||\arrTy*{A₁}{A₂}|| &≝ \parrTy*{||A₁||}{||A₂||} \\
-  ||\compTy*{A}|| &≝ \thunkTy*{|A|} \\
-  |A| &≝ \freeTy*{||A||}
+  ||\unitTy*||         & ≝ \unitTy*                   \\
+  ||\prodTy*{A₁}{A₂}|| & ≝ \tensorTy*{||A₁||}{||A₂||} \\
+  ||\voidTy*||         & ≝ \voidTy*                   \\
+  ||\sumTy*{A₁}{A₂}||  & ≝ \sumTy*{||A₁||}{||A₂||}    \\
+  ||\arrTy*{A₁}{A₂}||  & ≝ \parrTy*{||A₁||}{||A₂||}   \\
+  ||\compTy*{A}||      & ≝ \thunkTy*{|A|}             \\
+  |A|                  & ≝ \freeTy*{||A||}
 \end{align*}
 We extend the translation to contexts in the evident way.
 Then, we may define value interpretation $||M||$ and $|M|$ with the following typing soundness theorem in mind:
 \begin{theorem}[Soundness]
-~
-\begin{enumerate}
-\item If in lax $Γ \entails{\isOfTp M A}$, then in CBPV $||Γ|| \entails{\isOfTp{||M||}{||A||}}$;
-\item If in lax $Γ \entails{\retsTp E A}$, then in CBPV $||Γ|| \entails{\isOfTp{|E|}{|A|}}$.
-\end{enumerate}
+  ~
+  \begin{enumerate}
+    \item If in lax $Γ \entails{\isOfTp M A}$, then in CBPV $||Γ|| \entails{\isOfTp{||M||}{||A||}}$;
+    \item If in lax $Γ \entails{\retsTp E A}$, then in CBPV $||Γ|| \entails{\isOfTp{|E|}{|A|}}$.
+  \end{enumerate}
 \end{theorem}
 The translation rule is defined using the following schema:
 \begin{align*}
-&Γ \entails{\isOfTp M A} ⇝ ||M|| \\ 
-&Γ \entails{\retsTp E A} ⇝ |E|
+   & Γ \entails{\isOfTp M A} ⇝ ||M|| \\
+   & Γ \entails{\retsTp E A} ⇝ |E|
 \end{align*}
 We omit the full transition rules and the proof of soundness, as they are part of the homework.
 
@@ -413,27 +411,27 @@ It is not enough to only define type-sound translation,
 we have to make sure that it is also operationally sound.
 To do so, we define a \emph{heterogeneous} exact equality, called \emph{correspondence}, between terms in the two languages:
 \begin{definition}[Correspondence]
-~
-\begin{enumerate}
-\item $M ≈ V ∈ \compTy*A$ iff $∃ E, C$ such that $M ⇓ \compTy*E$, $V ⇓ \suspEx*C$, and $E \sim C ∈ A$;
-\item $E \sim C ∈ A$ iff $∃ V, W$ such that $E \stepsTo(*) \retEx*V$, $C \stepsTo(*) \retEx*W$, and $V ≈ W ∈ A$.
-\end{enumerate}
+  ~
+  \begin{enumerate}
+    \item $M ≈ V ∈ \compTy*A$ iff $∃ E, C$ such that $M ⇓ \compTy*E$, $V ⇓ \suspEx*C$, and $E \sim C ∈ A$;
+    \item $E \sim C ∈ A$ iff $∃ V, W$ such that $E \stepsTo(*) \retEx*V$, $C \stepsTo(*) \retEx*W$, and $V ≈ W ∈ A$.
+  \end{enumerate}
 \end{definition}
 Then we extend this to open contexts:
 \begin{definition}
-~
-\begin{enumerate}
-\item $Γ \gg M ≈ V ∈ A$ iff $∀γ ≈ δ ∈ Γ$, $\hat{γ}(M) ≈ \hat{δ}(V) ∈ A$;
-\item $Γ \gg E \sim C ∈ A$ iff $∀γ ≈ δ ∈ Γ$, $\hat{γ}(E) \sim \hat{δ}(C) ∈ A$.
-\end{enumerate}
+  ~
+  \begin{enumerate}
+    \item $Γ \gg M ≈ V ∈ A$ iff $∀γ ≈ δ ∈ Γ$, $\hat{γ}(M) ≈ \hat{δ}(V) ∈ A$;
+    \item $Γ \gg E \sim C ∈ A$ iff $∀γ ≈ δ ∈ Γ$, $\hat{γ}(E) \sim \hat{δ}(C) ∈ A$.
+  \end{enumerate}
 \end{definition}
 And we can state the fundamental theorem usually:
 \begin{theorem}[Translation Correctness]
-~
-\begin{enumerate}
-\item If $Γ \entails{\isOfTp M A} ⇝ ||M||$, then $Γ \gg M ≈ ||M|| ∈ A$;
-\item If $Γ \entails{\retsTp E A} ⇝ |E|$, then $Γ \gg E \sim |E| ∈ A$.
-\end{enumerate}
+  ~
+  \begin{enumerate}
+    \item If $Γ \entails{\isOfTp M A} ⇝ ||M||$, then $Γ \gg M ≈ ||M|| ∈ A$;
+    \item If $Γ \entails{\retsTp E A} ⇝ |E|$, then $Γ \gg E \sim |E| ∈ A$.
+  \end{enumerate}
 \end{theorem}
 We may prove it using the heterogeneous exact equality as the strengthened induction hypothesis,
 and the proof is done in homework.
@@ -445,10 +443,10 @@ With the foundations of CBPV established, we can use this framework to represent
 We introduce a new base type $\kw{string}$. We also introduce two new commands, $\kw{print}$ and $\kw{read}$, which respectively print a $\kw{string}$ to standard out and read a $\kw{string}$ from standard in.
 
 \[
-    \begin{array}{rl} 
-        A ::= & \cdots \mid \kw{string} \\
-        C ::= & \cdots \mid \kw{print}(V) \mid \kw{read} 
-    \end{array}
+  \begin{array}{rl}
+    A ::= & \cdots \mid \kw{string}                  \\
+    C ::= & \cdots \mid \kw{print}(V) \mid \kw{read}
+  \end{array}
 \]
 
 \subsection{Statics}
@@ -456,12 +454,12 @@ We add the following typing rules for the new commands. Assume that \kw{string} 
 
 \begin{mathpar}
   \defrule[T-Print][sta:print]
-  {\Gamma \entails{\isOfTp{s}{\kw{string}}}}
-  {\Gamma \entails{\isOfTp{\kw{print}(s)}{\freeTy*{\topTy}}}}
+  { \Gamma \entails{\isOfTp{s}{\kw{string}}} }
+  { \Gamma \entails{\isOfTp{\kw{print}(s)}{\freeTy*{\topTy}}} }
 
   \defrule[T-Read][sta:read]
-  {\strut}
-  {\Gamma \entails{\isOfTp{\kw{read}}{\freeTy*{\kw{string}}}}}
+  { \strut }
+  { \Gamma \entails{\isOfTp{\kw{read}}{\freeTy*{\kw{string}}}} }
 \end{mathpar}
 
 \subsection{Dynamics}
@@ -481,29 +479,29 @@ We present a subset of the state transitions in \cref{fig:io-dyn}.
   \centering
   \begin{mathpar}
     \defrule[D-Input][dyn:input]
-    {\strut}
-    {\consEx*{s}{\cal I} \stepsTo<\sndAc*{\kw{stdin}}{\kw{s}}> {\cal I}}
+    { \strut }
+    { \consEx*{s}{\cal I} \stepsTo<\sndAc*{\kw{stdin}}{\kw{s}}> {\cal I} }
 
     \defrule[D-Output][dyn:output]
-    {\strut}
-    {{\cal O} \stepsTo<\rcvAc*{\kw{stdout}}{\kw{s}}> \consEx*{s}{\cal O}}
+    { \strut }
+    { {\cal O} \stepsTo<\rcvAc*{\kw{stdout}}{\kw{s}}> \consEx*{s}{\cal O} }
 
     \defrule[D-Print][dyn:print]
-    {\strut}
-    {\kw{print}(s) \stepsTo<\sndAc*{\kw{stdout}}{\kw{s}}> {\retEx*{\unitEx*}}}
+    { \strut }
+    { \kw{print}(s) \stepsTo<\sndAc*{\kw{stdout}}{\kw{s}}> {\retEx*{\unitEx*}} }
 
     \defrule[D-Read][dyn:read]
-    {\strut}
-    {\kw{read} \stepsTo<\rcvAc*{\kw{stdin}}{\kw{s}}> {\retEx*{s}}}
+    { \strut }
+    { \kw{read} \stepsTo<\rcvAc*{\kw{stdin}}{\kw{s}}> {\retEx*{s}} }
 
     \defrule[D-Single][dyn:single]
-    {S_1 \stepsTo<\alpha> S_1'}
-    {S_1 \parallel S_2 \stepsTo<\alpha> S_1' \parallel S_2}
+    { S_1 \stepsTo<\alpha> S_1' }
+    { S_1 \parallel S_2 \stepsTo<\alpha> S_1' \parallel S_2 }
 
     \defrule[D-Par][dyn:par]
-    {S_1 \stepsTo<\alpha> S_1' \\
-      S_2 \stepsTo<\overline{\alpha}> S_2'}
-    {S_1 \parallel S_2 \stepsTo S_1' \parallel S_2'}
+    { S_1 \stepsTo<\alpha> S_1' \\
+      S_2 \stepsTo<\overline{\alpha}> S_2' }
+    { S_1 \parallel S_2 \stepsTo S_1' \parallel S_2' }
 
   \end{mathpar}
   \caption{Dynamics for I/O effects}
@@ -522,24 +520,24 @@ We present a few select equations in \cref{fig:io-eq}.
   \begin{mathpar}
 
     \defrule[E-Print-Fun][eq:print-fun]
-    {\Gamma \entails{\isOfTp{s}{\kw{string}}} \\
-      \Gamma, \isOfTp{x}{A} \entails{\isOfTp{C}{X}}}
-    {\Gamma \entails{\seqCmd*{\kw{print}(s)}{\lamEx*{x}{C} \equiv \lamEx*{x}{\seqCmd*{\kw{print}(s)}{C}}}} : \parrTy*{A}{X}}
+    { \Gamma \entails{\isOfTp{s}{\kw{string}}} \\
+      \Gamma, \isOfTp{x}{A} \entails{\isOfTp{C}{X}} }
+    { \Gamma \entails{\seqCmd*{\kw{print}(s)}{\lamEx*{x}{C} \equiv \lamEx*{x}{\seqCmd*{\kw{print}(s)}{C}}}} : \parrTy*{A}{X} }
 
     \defrule[E-Read-Fun][eq:read-fun]
     { \Gamma, \isOfTp{s}{\kw{string}}, \isOfTp{x}{A} \entails{\isOfTp{C}{X}}}
-    {\Gamma \entails{\bndEx*{\kw{read}}{s}{\lamEx*{x}{C}} \equiv \lamEx*{x}{\bndEx*{\kw{read}}{s}{C}}} : \parrTy*{A}{X}}
+    { \Gamma \entails{\bndEx*{\kw{read}}{s}{\lamEx*{x}{C}} \equiv \lamEx*{x}{\bndEx*{\kw{read}}{s}{C}}} : \parrTy*{A}{X} }
 
     \defrule[E-Print-Bind][eq:print-bind]
-    {\Gamma \entails{\isOfTp{s}{\kw{string}}} \\
-    \Gamma \entails{\isOfTp{C_1}{\freeTy*{A_1}}} \\
-    \Gamma, \isOfTp{x}{A_1} \entails{\isOfTp{C_2}{X_2}}}
-    {\Gamma \entails{\bndEx*{\left( \seqCmd*{\kw{print}(s)}{C_1} \right)}{x}{C_2} \equiv \seqCmd*{\kw{print}(s)}{\bndEx*{C_1}{x}{C_2}}} : X_2}
+    { \Gamma \entails{\isOfTp{s}{\kw{string}}} \\
+      \Gamma \entails{\isOfTp{C_1}{\freeTy*{A_1}}} \\
+      \Gamma, \isOfTp{x}{A_1} \entails{\isOfTp{C_2}{X_2}} }
+    { \Gamma \entails{\bndEx*{\left( \seqCmd*{\kw{print}(s)}{C_1} \right)}{x}{C_2} \equiv \seqCmd*{\kw{print}(s)}{\bndEx*{C_1}{x}{C_2}}} : X_2 }
 
     \defrule[E-Read-Bind][eq:print-bind]
-    {\Gamma, \isOfTp{s}{\kw{string}} \entails{\isOfTp{C_1}{\freeTy*{A_1}}} \\
-    \Gamma, \isOfTp{x}{A_1} \entails{\isOfTp{C_2}{X_2}}}
-    {\Gamma \entails{\bndEx*{\left( \bndEx*{\kw{read}}{s}{C_1} \right)}{x}{C_2} \equiv \bndEx*{\kw{read}}{s}{\bndEx*{C_1}{x}{C_2}}} : X_2}
+    { \Gamma, \isOfTp{s}{\kw{string}} \entails{\isOfTp{C_1}{\freeTy*{A_1}}} \\
+      \Gamma, \isOfTp{x}{A_1} \entails{\isOfTp{C_2}{X_2}}}
+    { \Gamma \entails{\bndEx*{\left( \bndEx*{\kw{read}}{s}{C_1} \right)}{x}{C_2} \equiv \bndEx*{\kw{read}}{s}{\bndEx*{C_1}{x}{C_2}}} : X_2 }
 
   \end{mathpar}
   \caption{Equations for I/O effects}
@@ -561,9 +559,9 @@ We also consider store effects using CBPV. For simplicity, we represent mutable 
 \subsection{Grammar}
 We add two new commands, \kw{get} and \kw{set}, which respectively read and write to memory.
 \[
-    \begin{array}{rl} 
-        C ::= & \cdots \mid \getCmd<a> \mid \setCmd<a>{V}
-    \end{array}
+  \begin{array}{rl}
+    C ::= & \cdots \mid \getCmd<a> \mid \setCmd<a>{V}
+  \end{array}
 \]
 Here, $a$ is an assignable, which is essentially a unique symbol for a memory location.
 
@@ -577,15 +575,15 @@ Note that each type $A_i$ must be \emph{ground}. A ground type is essentially an
 We add the following typing rules for the new commands:
 \begin{mathpar}
   \defrule[T-Get][sta:get]
-  {\Sigma \entails{\hasTp{a}{A}} \\
-   \left( A\, {\sf ground} \right)}
-  {\Gamma \entails[\Sigma]{\isOfTp{\getCmd<a>}{\freeTy*{A}}}}
+  { \Sigma \entails{\hasTp{a}{A}} \\
+    \left( A\, {\sf ground} \right) }
+  { \Gamma \entails[\Sigma]{\isOfTp{\getCmd<a>}{\freeTy*{A}}} }
 
   \defrule[T-Set][sta:set]
-  {\Sigma \entails{\hasTp{a}{A}} \\
-   \left( A\, {\sf ground} \right) \\
-    \Gamma \entails[\Sigma]{\isOfTp{V}{A}}}
-  {\Gamma \entails[\Sigma]{\isOfTp{\setCmd<a>{V}}{\freeTy*{A}}}}
+  { \Sigma \entails{\hasTp{a}{A}} \\
+    \left( A\, {\sf ground} \right) \\
+    \Gamma \entails[\Sigma]{\isOfTp{V}{A}} }
+  { \Gamma \entails[\Sigma]{\isOfTp{\setCmd<a>{V}}{\freeTy*{A}}} }
 \end{mathpar}
 Note that $\setCmd<a>{V}$ returns the value $V$ that was written to memory, instead of just $\unitEx*$.
 
@@ -605,16 +603,16 @@ We present a subset of the state transitions:
 
 \begin{mathpar}
   \defrule[D-Get][dyn:get]
-  {\strut}
-  {\memState{\mu \parallel \mapsVal{a}{V}}{\getCmd<a>} \stepsTo[\Sigma, \hasTp{a}{A}] \memState{\mu \parallel \mapsVal{a}{V}}{\retEx*{V}}}
+  { \strut}
+  { \memState{\mu \parallel \mapsVal{a}{V}}{\getCmd<a>} \stepsTo[\Sigma, \hasTp{a}{A}] \memState{\mu \parallel \mapsVal{a}{V}}{\retEx*{V}} }
 
   \defrule[D-Set][dyn:set]
-  {V \evalsTo[\Sigma] V_0}
-  {\memState{\mu \parallel \mapsVal{a}{\_}}{\setCmd<a>{V}} \stepsTo[\Sigma, \hasTp{a}{A}] \memState{\mu \parallel \mapsVal{a}{V_0}}{\retEx*{V_0}}}
+  { V \evalsTo[\Sigma] V_0}
+  { \memState{\mu \parallel \mapsVal{a}{\_}}{\setCmd<a>{V}} \stepsTo[\Sigma, \hasTp{a}{A}] \memState{\mu \parallel \mapsVal{a}{V_0}}{\retEx*{V_0}} }
 \end{mathpar}
 
 \subsection{Equations}
-We have the following equations in \cref{fig:mutable-eq}. For simplicity, we define 
+We have the following equations in \cref{fig:mutable-eq}. For simplicity, we define
 \[\letvEx{V}{x}{C} \triangleq \bndEx*{\retCmd*{V}}{x}{C}\]
 
 Note that many of the equations show how to ``swap'' a \kw{get} before a \kw{set} or remove the \kw{get} entirely. Combined with the rest of the equations, this allow us to ``normalize'' \kw{set} and \kw{get} commands to a sequence of \kw{get}s followed by a sequence \kw{sets}.
@@ -624,41 +622,39 @@ Note that many of the equations show how to ``swap'' a \kw{get} before a \kw{set
   \begin{mathpar}
 
     \defrule[E-Set-Get-Same][eq:set-get-same]
-    {\Sigma \entails{\hasTp{a}{A}} \\
-    \Gamma \entails[\Sigma]{\isOfTp{V}{A}}}
-    {\Gamma \entails[\Sigma]{\seqCmd*{\setCmd<a>{V}}{\getCmd<a>} \equiv \setCmd<a>{V}} : \freeTy*{A}}
+    { \Sigma \entails{\hasTp{a}{A}} \\
+      \Gamma \entails[\Sigma]{\isOfTp{V}{A}} }
+    { \Gamma \entails[\Sigma]{\seqCmd*{\setCmd<a>{V}}{\getCmd<a>} \equiv \setCmd<a>{V}} : \freeTy*{A} }
 
-    \defrule[E-Set-Get-Diff][eq:set-get-diff]
-    {\Sigma \entails{\hasTp{a}{A}} \\
-    \Sigma \entails{\hasTp{b}{B}} \\
-    \left( a \neq b \right) \\
-    \Gamma \entails[\Sigma]{\isOfTp{V}{A}}}
-    {\Gamma \entails[\Sigma]{\seqCmd*{\setCmd<a>{V}}{\getCmd<b>} \equiv \bndEx*{\getCmd<b>}{x}{\seqCmd*{\setCmd<a>{V}}{\retCmd*{x}}}} : \freeTy*{B}}
+      \defrule[E-Set-Get-Diff][eq:set-get-diff]
+      { \Sigma \entails{\hasTp{a}{A}} \\
+        \Sigma \entails{\hasTp{b}{B}} \\
+        \left( a \neq b \right) \\
+        \Gamma \entails[\Sigma]{\isOfTp{V}{A}} }
+      { \Gamma \entails[\Sigma]{\seqCmd*{\setCmd<a>{V}}{\getCmd<b>} \equiv \bndEx*{\getCmd<b>}{x}{\seqCmd*{ \setCmd<a>{V}}{\retCmd*{x}}}} : \freeTy*{B} }
 
     \defrule[E-Set-Set-Same][eq:set-set-same]
-    {\Sigma \entails{\hasTp{a}{A}} \\
-    \Gamma \entails[\Sigma]{\isOfTp{V}{A}} \\
-    \Gamma, \isOfTp{x}{A} \entails[\Sigma]{\isOfTp{V'}{A}}
-    }
-    {\Gamma \entails[\Sigma]{\bndEx*{\setCmd<a>{V}}{x}{\setCmd<a>{V'}} \equiv \letvEx{V}{x}{\setCmd<a>{V'}}} : \freeTy*{A}}
+    { \Sigma \entails{\hasTp{a}{A}} \\
+      \Gamma \entails[\Sigma]{\isOfTp{V}{A}} \\
+      \Gamma, \isOfTp{x}{A} \entails[\Sigma]{\isOfTp{V'}{A}} }
+    { \Gamma \entails[\Sigma]{\bndEx*{\setCmd<a>{V}}{x}{\setCmd<a>{V'}} \equiv \letvEx{V}{x}{\setCmd<a>{V'}}} : \freeTy*{A} }
 
     \defrule[E-Set-Set-Diff][eq:set-set-diff]
-    {\Sigma \entails{\hasTp{a}{A}} \\
-    \Sigma \entails{\hasTp{b}{B}} \\
-    \left( a \neq b \right) \\
-    \Gamma \entails[\Sigma]{\isOfTp{V}{A}} \\
-    \Gamma, \isOfTp{x}{A} \entails[\Sigma]{\isOfTp{V'}{B}}
-    }
-    {\Gamma \entails[\Sigma]{\bndEx*{\setCmd<a>{V}}{x}{\setCmd<b>{V'}} \equiv \letvEx{V}{x}{\bndEx*{\setCmd<b>{V'}}{y}{\seqCmd*{\setCmd<a>{V}}{\retCmd*{y}}}}} : \freeTy*{B}}
+    { \Sigma \entails{\hasTp{a}{A}} \\
+      \Sigma \entails{\hasTp{b}{B}} \\
+      \left( a \neq b \right) \\
+      \Gamma \entails[\Sigma]{\isOfTp{V}{A}} \\
+      \Gamma, \isOfTp{x}{A} \entails[\Sigma]{\isOfTp{V'}{B}} }
+    { \Gamma \entails[\Sigma]{\bndEx*{\setCmd<a>{V}}{x}{\setCmd<b>{V'}} \equiv \letvEx{V}{x}{\bndEx*{\setCmd<b>{V'}}{y}{\seqCmd*{\setCmd<a>{V}}{\retCmd*{y}}}}} : \freeTy*{B} }
 
     \defrule[E-Get-Set-Same][eq:get-set-same]
-    {\Sigma \entails{\hasTp{a}{A}}}
-    {\Gamma \entails[\Sigma]{\bndEx*{\getCmd<a>}{x}{\setCmd<a>{x}} \equiv \getCmd<a>} : \freeTy*{A}}
+    { \Sigma \entails{\hasTp{a}{A}} }
+    { \Gamma \entails[\Sigma]{\bndEx*{\getCmd<a>}{x}{\setCmd<a>{x}} \equiv \getCmd<a>} : \freeTy*{A} }
 
     \defrule[E-Get-Get][eq:get-get]
-    {\Sigma \entails{\hasTp{a}{A}} \\
-    \Sigma \entails{\hasTp{b}{B}}}
-    {\Gamma \entails[\Sigma]{\seqCmd*{\getCmd<a>}{\getCmd<b>} \equiv \getCmd<b>} : \freeTy*{B}}
+    { \Sigma \entails{\hasTp{a}{A}} \\
+      \Sigma \entails{\hasTp{b}{B}} }
+    { \Gamma \entails[\Sigma]{\seqCmd*{\getCmd<a>}{\getCmd<b>} \equiv \getCmd<b>} : \freeTy*{B} }
 
   \end{mathpar}
   \caption{Equations for mutable state}
