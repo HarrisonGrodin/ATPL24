@@ -534,7 +534,7 @@ We present a few select equations in \cref{fig:io-eq}.
       \Gamma, \isOfTp{x}{A_1} \entails{\isOfTp{C_2}{X_2}} }
     { \Gamma \entails{\bndEx*{\left( \seqCmd*{\kw{print}(s)}{C_1} \right)}{x}{C_2} \equiv \seqCmd*{\kw{print}(s)}{\bndEx*{C_1}{x}{C_2}}} : X_2 }
 
-    \defrule[E-Read-Bind][eq:print-bind]
+    \defrule[E-Read-Bind][eq:read-bind]
     { \Gamma, \isOfTp{s}{\kw{string}} \entails{\isOfTp{C_1}{\freeTy*{A_1}}} \\
       \Gamma, \isOfTp{x}{A_1} \entails{\isOfTp{C_2}{X_2}}}
     { \Gamma \entails{\bndEx*{\left( \bndEx*{\kw{read}}{s}{C_1} \right)}{x}{C_2} \equiv \bndEx*{\kw{read}}{s}{\bndEx*{C_1}{x}{C_2}}} : X_2 }
