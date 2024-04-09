@@ -1,0 +1,297 @@
+% latexmk -pdf week3
+
+\documentclass[letterpaper]{article}
+
+\input{setup}
+\input{defns}
+
+\usepackage{amsmath, amssymb}
+
+\usepackage[left=1in, right=1in, top=1in, bottom=1in]{geometry}
+
+\newcommand{\rSuspEx}[2]{\Abt{\Opn{susp}}(\Abs<#1>{#2})}
+\newcommand{\rkSuspEx}[3]{\Abt{\Opn{susp}}^{(#1)}(\Abs<#2>{#3})}
+
+\newcommand{\emptyStk}{\varepsilon}
+\newcommand{\stkStep}[4]{#1 \triangleright #2 \stepsTo #3 \triangleright #4}
+\newcommand{\stkMultiStep}[4]{#1 \triangleright #2 \stepsTo(\ast) #3 \triangleright #4}
+
+\setlength\parindent{0pt}
+
+\NewDocumentCommand{\semEq}{m m m}{#1\mathrel{\doteq}#2 \mathrel{\in} #3}
+\NewDocumentCommand{\kleeneEq}{m m}{#1\mathrel{\simeq}#2}
+
+\newcommand{\iffdefn}[2]{#1 \; \text{iff} \; #2 }
+
+\title{15-791 ATPL \\ Week 10 Notes}
+\author{Colin McDonald (colinmcd) and Karthik Nukala (kvn)}
+\date{Lectures: 3/26, 3/28 \\ Scribed: \today}
+\begin{document}
+\maketitle
+\section{Partiality}
+
+To our base call-by-push-value framework, we introduce recursive/self-referential
+suspensions.
+
+That is, $\suspEx*{C}$ in base CBPV is transformed into $\rSuspEx{x}{C}$, with statics given by
+\begin{equation}\label{eq:rsusp-stc}
+    \defrule
+    { \Gamma, \isOfTp{x}{U(X)}\entails{\isOfTp{C}{X}} }
+    { \Gamma \entails{\isOfTp{\rSuspEx{x}{C}}{U(X)}} }
+  \end{equation}
+and corresponding dynamics given by
+\begin{equation}\label{eq:rsusp-dyn}
+    \forceEx*{\rSuspEx{x}{C}}\stepsTo \Sub{\rSuspEx{x}{C}}{x}{C}
+\end{equation}
+
+Notice that we can now trivially write programs that never terminate!
+
+Consider $\omega$ defined as follows:
+\[
+    \omega \triangleq \forceEx*{\rSuspEx{x}{x}}
+\]
+
+Now, see what happens when we step $\omega$:
+\begin{align*}
+    \omega &\triangleq \forceEx*{\rSuspEx{x}{x}} &\text{defn.} \\
+    &\stepsTo \Sub{\rSuspEx{x}{C}}{x}{x} &\text{dynamics (\ref{eq:rsusp-dyn})}\\
+    &\stepsTo \omega &\text{subst.}
+\end{align*}
+
+\subsubsection{Aside: Total Functions}
+The fact that $\omega$ exists initially seems to be a curse but it can be a blessing from a certain point of view.
+
+Consider G\"{o}del's T as presented in PFPL/15-312: base types + $\recEx*{e_0}{x}{e_1}({N})$.
+
+Let's try writing the Euclidean algorithm for calculating the greatest
+common divisor (GCD) of two numbers.
+
+In SML, this can be mocked up as follows:
+\begin{verbatim}
+    fun gcd m 0 = m
+      | gcd m n = gcd n (m mod n)
+\end{verbatim}
+\begin{itemize}
+    \item Notably, the recursive measure is not immediately obvious! Establishing termination of GCD requires involved reasoning about \verb|mod|, alongside the fact that we swapped arguments in the recursive call.
+    \item In T, we're only given $\recEx*{e_0}{x}{e_1}(N)$, wherein the recursive measure is given by $N$ and via the corresponding dynamics rule, goes down by one in subsequent calls.
+\end{itemize}
+Writing GCD in T is a good, albeit laborious, exercise (solution\footnote{https://gist.github.com/joom/b5d6f69f32e1e8d9026c8a27f7d8de96})
+
+As soon as we introduce partiality in something like PCF, we can immediately write GCD as follows (using a made-up concrete syntax):
+
+\begin{verbatim}
+    fix gcd : nat -> nat -> nat is
+       \(m: nat): 
+       \(n: nat):
+       ifz n {
+          z     => m
+        | s(n') => gcd n (m mod n)
+       }
+\end{verbatim}
+
+At this point, this is basically the SML code discussed above.
+
+In some sense, the T code is \textit{required} to exhibit explicit values that bound the recursion (by virtue of having to write an $N$ for $\recEx*{e_0}{x}{e_1}(N)$). This serves as a proof of termination, which leads to the punch line:
+
+\begin{center}
+    Total programs must also encode their proof of termination!
+\end{center}
+
+For any function whose termination is slightly less obvious (like GCD), the proof of termination becomes much longer, resulting in longer code.
+
+This is a result of the Blum Size Theorem\footnote{https://existentialtype.wordpress.com/2014/03/20/old-neglected-theorems-are-still-theorems/}
+
+\subsection{Equational Theories for Partial Functions}
+
+In the usual pursuit of reasoning about our programs,
+we'd like to be able to define an equation of the
+following sort:
+
+\[
+    \defrule
+    {\text{(suitable premises)}}
+    {\Gamma \entails{\forceEx*{\rSuspEx{x}{C}} \equiv \isOfTp{\Sub{\rSuspEx{x}{C}}{x}{C}}{X}}}
+\]
+
+Justifying these definitions requires developing logical relations for our language, taking care to accommodate our newly-introduced partiality.
+
+\begin{definition}[Exact Equality]
+    Consider a few cases of the definition:
+
+    \begin{itemize}
+        \item $\freeTy \ansTy$:
+        \[
+            \iffdefn
+            {\semEq{C}{C'}{\freeTy \ansTy}}
+            {\kleeneEq{C}{C'}}
+        \]
+        where $\kleeneEq{\_}{\_}$ is defined as follows:
+        \[
+            \kleeneEq{C}{C'} \triangleq 
+            C \stepsTo(\ast) \freeEx{Y/N} \iff C' \stepsTo(\ast) \freeEx{Y/N}
+        \]
+        Note: If $C\uparrow$, then $C'\uparrow$, otherwise they both terminate with the same $\isOfTp{Y/N}{\ansTy}$ value. Expressing this notion via casework (terminate or not) implicitly uses LEM, so we express it as an $\iff$.
+        \item $\freeTy A$:
+        \[
+            \iffdefn
+            {\semEq{C}{C'}{\freeTy A}}
+            {\begin{cases}
+          C \stepsTo(\ast) \freeEx{M} \iff C' \stepsTo(\ast) \freeEx{M'} \\
+          \semEq{M}{M'}{A}
+          \end{cases}}
+        \]
+        That is to say, $C$ and $C'$ both ``co-terminate'' with equal values!
+        \item $\parrTy*{A}{X}$: as before
+        \item $\thunkTy{X}$:
+        \[
+            \iffdefn
+            {\semEq{M}{M'}{\thunkTy{X}}}
+            {\semEq{\forceEx*{M}}{\forceEx*{M'}}{X}}
+        \]
+    \end{itemize}
+\end{definition}
+
+The definition as presented is well-defined. But what's the catch? 
+
+Let's consider how one would prove the reflexivity theorem.
+\subsubsection{Reflexivity (Attempt)}
+
+Suppose $\Gamma, \isOfTp{x}{\thunkTy{X}} \gg C \in X$.
+
+WTS: $\Gamma \gg \rSuspEx{x}{C} \in \thunkTy{X}$
+
+Suppose $\gamma \in \Gamma$ (and therefore, $\isOfTp{x}{\thunkTy{X}} \gg \hat{\gamma}C \in X$)
+
+WTS: $\rSuspEx{x}{\hat{\gamma}C} \in \thunkTy{X}$
+
+STS: $\forceEx*{\rSuspEx{x}{\hat{\gamma}C}} \in X$
+
+Via head expansion, STS: $\Sub{\rSuspEx{x}{\hat{\gamma}C}}{x}{C} \in X$
+
+The usual move (of applying the IH to the substitutions) breaks down here: $\rSuspEx{x}{\hat{\gamma}C}$ is exactly what we want to prove!
+
+What's the fix?
+
+\subsubsection{Compactness}
+
+The key observation (common to analyses of partiality) is that
+\begin{center}
+terminating computations only necessitate \textit{finite} unrollings of the partial computation!
+\end{center}
+
+This is akin to our earlier analyses of coinduction: a generator itself may be an infinite object but any computation (given that we were in a total setting at the time of discussion) can only unfold this generator \textit{finitely} many times.
+
+In terms of a while-loop computation, if I have a program 
+\[
+P \triangleq \texttt{...; while(...)\{\}; ...}
+\]
+and \textit{I ensure that $P$ terminates}, then $\exists \; n \in \mathbb{N}$ for which
+\[
+P' \triangleq \texttt{...; int count = 0; while(...)\{...; count++;\}; assert(count == n); ...}
+\]
+$P'$ as defined above will both not trigger the assert and will be ``equal'' to $P$.
+
+Intuitively, this makes sense but we'd like to prove this.
+
+\begin{itemize}
+    \item In a Turing Machine setting, this manifests itself as a Kleene Normal Form\footnote{https://en.wikipedia.org/wiki/Kleene\%27s\_T\_predicate}, which is enough to push the proof through.
+    \item However, in a ``cultured'' higher-order setting, things don't seem to work out.
+\end{itemize}
+Consider an issue that arises when trying to prove the following theorem:
+
+WTS: if $\Sub{\rSuspEx{x}{C_0}}{x}{C} \downarrow \lamEx*{x}{D}$ then $\Sub{\rkSuspEx{k}{x}{C_0}}{x}{C} \downarrow \lamEx*{x}{D}$
+
+where $\rkSuspEx{k}{x}{C_0}$ is defined to roughly mean ``limit the number of recursive calls to $k$ - if more is needed, diverge''.
+\\
+
+Are the two $\lambda$'s ($\lamEx*{x}{D}$) on the right side actually equal? No!
+\begin{itemize}
+    \item $\lamEx*{x}{D}$ in the clause $\Sub{\rSuspEx{x}{C_0}}{x}{C} \downarrow \lamEx*{x}{D}$ has occurrences of $\rSuspEx{x}{C_0}$
+    \item $\lamEx*{x}{D}$ in the clause $\Sub{\rkSuspEx{k}{x}{C_0}}{x}{C} \downarrow \lamEx*{x}{D}$ has occurrences of $\rkSuspEx{k}{x}{C_0}$
+\end{itemize}
+
+How do we fix this? \underline{The stack machine!}
+
+\[
+    \defrule
+    {M\evalsTo{\rkSuspEx{0}{x}{C}}}
+    {\stkStep{K}{\forceEx*{M}}{K}{\forceEx*{M}}}
+    \\ \hspace{0.5in}
+    \defrule
+    {M\evalsTo{\rkSuspEx{n + 1}{x}{C}}}
+    {\stkStep{K}{\forceEx*{M}}{K}{\Sub{\rkSuspEx{n}{x}{C}}{x}{C}}}
+\]
+
+Note: in an alternative formulation, we could \emph{define} $\rkSuspEx{n}{x}{C}$ by induction on $n$:
+\[
+\rkSuspEx{0}{x}{C} \triangleq \forceEx*{\rkSuspEx{0}{x}{C}}
+\\ \hspace{0.5in}
+\rkSuspEx{n+1}{x}{C} \triangleq \Sub{\rkSuspEx{n}{x}{C}}{x}{C}
+\]
+
+Now, we can state compactness as follows:
+
+\begin{theorem}[Compactness]
+    If $\stkMultiStep{\Sub{\rSuspEx{x}{C}}{x}{K}}{\Sub{\rSuspEx{x}{C_0}}{x}{c}}{\emptyStk}{\freeEx{V}}$, then for some $n \geq 0$,
+    $\stkMultiStep{\Sub{\rkSuspEx{n}{x}{C}}{x}{K}}{\Sub{\rkSuspEx{n}{x}{C_0}}{x}{c}}{\emptyStk}{\freeEx{V}}$, and conversely.
+\end{theorem}
+
+\begin{lemma}
+    If $x : U(X) \gg \semEq{C}{C'}{X}$ then $\forall n \geq 0, \semEq{\rkSuspEx{n}{x}{C}}{\rkSuspEx{n}{x}{C'}}{U(X)}$
+\end{lemma}
+
+\begin{lemma}
+    If $x : U(X) \gg \semEq{C}{C'}{X}$ then $\semEq{\rSuspEx{x}{C}}{\rSuspEx{x}{C'}}{U(X)}$
+\end{lemma}
+
+\subsubsection{Reflexivity (Full)}
+
+\begin{theorem}[Reflexivity]
+    \textnormal{Suppose $\Gamma, x : U(X) \gg C \in X$.}
+
+    \textnormal{WTS: $\Gamma \gg \rSuspEx{x}{C}{\thunkTy{X}}$.}
+
+    \textnormal{Suppose $\gamma \in \Gamma$ (and therefore, $\isOfTp{x}{\thunkTy{X}} \gg \hat{\gamma}C \in X$).}
+
+    \textnormal{WTS: $\rSuspEx{x}{\hat{\gamma}C} \in \thunkTy{X}$.}
+
+    \textnormal{Follows by Lemma 1.3, using the IH with $\gamma$ to get that $\hat{\gamma}(C) \in X$}
+
+    \textnormal{Other cases: as before.}
+
+\end{theorem}
+
+\subsection{Denotational Semantics}
+
+We can define the denotation of $\rSuspEx{x}{C}$ as follows:
+
+\[ \Vert \rSuspEx{x}{C} \Vert = \bigsqcup_{i \geq 0} \Vert \rkSuspEx{i}{x}{C} \Vert \in \Vert U(X) \Vert \]
+
+This definition forms a directed complete partial order (dcpo). However, note that these denotational semantics miss some equivalences that exist in the operational semantics.
+
+This is known as the full abstraction problem (Plotkin).
+
+There is also a further issue: suppose we want to prove some property $\varphi(\rSuspEx{x}{C})$.
+It is \underline{insufficient} to show $\forall i \geq 0, \varphi(\rkSuspEx{i}{x}{C})$. For example, consider if $\varphi$ is ``halts in a certain (finite) number of steps'', which holds for any $\rkSuspEx{i}{x}{C}$ but not for $\rSuspEx{x}{C}$ in general.
+
+\section{Introduction to Dependent Types}
+(Guided by propositions-as-types)
+
+Per Martin-Löf's Intuitionistic Type Theory has a semantics of intuitionistic logic a la Brouwer, where truth is derived from a fundamental notion of \underline{computation}.
+
+\subsection{Primitive Notions}
+\begin{align*}
+    A \textbf{ type } & \qquad  A \equiv A' \textbf{ type} \\
+    M : A  & \qquad M \equiv M' : A \\[-0.4\baselineskip]
+\end{align*}
+
+\vspace{-\baselineskip}
+And then we have the notions of \emph{families} of types and elements:
+\begin{align*}
+    x_1 : A_1, ..., x_n : A_n \vdash A \textbf{ type } & \qquad x_1 : A_1, ..., x_n : A_n \vdash A \equiv A' \textbf{ type} \\
+    x_1 : A_1, ..., x_n : A_n \vdash M : A & \qquad x_1 : A_1, ..., x_n : A_n \vdash M \equiv M' : A
+\end{align*}
+
+Elementhood (and element equality) is inseparable from typehood (and type equality): there is no phase distinction between programs and specs! In other words, element- and type equality mutually influence each other.
+
+\end{document}
