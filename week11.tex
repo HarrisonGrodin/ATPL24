@@ -30,7 +30,7 @@ There exists other ways to deal with partiality including Denotational semantics
 
 An alternative method that is a little more complicated but gives a little more insight into the problem is Pitts (spelling?). He uses a logical relation that is indexed by an upper bound on the number of steps that a program takes to terminate.
 
-Logical relations on partiality rely on fixed point induction. This gives rise to methods of interpreting types as "complete denotational partial orders".
+Logical relations on partiality rely on fixed point induction. This gives rise to methods of interpreting types as ``complete denotational partial orders''.
 $$susp^{(0)}(x.C) \sqsubset susp^{(1)}(x.C) \sqsubset susp^{(2)}(x.C) \sqsubset \dots susp(x.C)$$
 This gives rise to the mathematical interpretation of
 $$susp(x.C) = \sqcup_{i \ge 0} susp(x.C)$$
@@ -55,11 +55,11 @@ Safety is still based on programs structured by types. We have some minimal sens
 
 eg) list : Type $\rightarrow$ Type
 
-"Type $\rightarrow$ Type" is a kind
+``Type $\rightarrow$ Type'' is a kind 
 
-"list" is a constructor.
+``list'' is a constructor.
 
-\subsection*{Aside: Pascal and dependent types in "boring" languages}
+\subsection*{Aside: Pascal and dependent types in ``boring'' languages}
 
 Pascal, a commonly cited and once widely used language that inspired the rise of object oriented programming, attempted a grossly simplified version of this by pulling some basic terms (i.e. constructors) into the their own kind through the use of singletons. Bob and PL paper denotes these singleton kinds $\mathbb{S}(3)$ or S(3), where 3 is just an example of a constructor. If you take HOT compilation, you will notice that this singleton kind calculus is one of many key insights for making a type preserving compiler for SML. This is necessary to handle the fact that modules influence the statics for SML yet functors and structs clearly have state and evaluation.
 
@@ -77,7 +77,7 @@ Whereas with elements in the context / families, we have:
 
 $$x : Nat \entails Seq(2 * x) \equiv Seq(x + x) type$$
 
-With families, we now wish to prove "functionality" of our types. Whereas before we could evaluate if two types are equal based on alpha-equivalence, we must now substitute in equal terms and prove.
+With families, we now wish to prove ``functionality'' of our types. Whereas before we could evaluate if two types are equal based on alpha-equivalence, we must now substitute in equal terms and prove.
 
 If $M \equiv N : Nat$ then $Seq(2 * M) \equiv Seq(N + N) type$
 
@@ -106,7 +106,7 @@ These four ideas are the core of dependent type theory: (Note: This material see
     \[
         \frac{\Gamma \entails M : A \quad \Gamma \entails A \equiv B}{\Gamma \entails M : B} \quad \frac{}{\Gamma x : A \Gamma' \entails x : A}
     \]
-    \item Admissibilities. Different implementers do this diffferent, but the takeaways are the same.
+    \item Admissibilities. Different implementers do this differently, but the takeaways are the same.
 
     if $\Gamma \entails M : A$ then $\Gamma \entails A type$. This is a common presupposition when working with dependent type theory. It is similiar to the constraint that the context is well-formed.
 
