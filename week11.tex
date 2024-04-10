@@ -61,9 +61,9 @@ eg) list : Type $\rightarrow$ Type
 
 \subsection*{Aside: Pascal and dependent types in ``boring'' languages}
 
-Pascal, a commonly cited and once widely used language that inspired the rise of object oriented programming, attempted a grossly simplified version of this by pulling some basic terms (i.e. constructors) into the their own kind through the use of singletons. Bob and PL paper denotes these singleton kinds $\mathbb{S}(3)$ or S(3), where 3 is just an example of a constructor. If you take HOT compilation, you will notice that this singleton kind calculus is one of many key insights for making a type preserving compiler for SML. This is necessary to handle the fact that modules influence the statics for SML yet functors and structs clearly have state and evaluation.
+Pascal, a commonly cited and once widely used language that inspired the rise of object oriented programming, attempted a grossly simplified version of this by pulling some basic terms (i.e. constructors) into the their own kind through the use of singletons. PL papers denotes these singleton kinds $\mathbb{S}(3)$ or S(3), where 3 is just an example of a constructor. If you take HOT compilation, you will notice that this singleton kind calculus is one of many key insights for making a type preserving compiler for SML. This is necessary to handle the fact that modules influence the statics for SML yet functors and structs clearly have state and evaluation.
 
-My personal take is that practically all languages leverage at least the severely degenerate case of dependent types not just pascal. In C languages, arrays often degenerate into [ ] or even worse pointer types if you pass them into functions. However, arrays within a single function and even structs can be given a length [6]. This length must be known at compile time however showing the strict phase distinction of C. In pre C++-11 compilers, similar limitations exist. However, as of C++17, we now have constexpr functions which allow us to compute values at compile time (including the array type length) using basically anything in the language and getting more permissive every edition. This is shows ideas of dependent types have influences even on languages as far from the light of type theory as can be. In C++ circles, they have the same debates about how decidability is overrated as Bob had in class. It seems arbitrary to stop at decidable and not something like polynomial so we might as well allow any computation that can be done at compilation time (i.e., no user input).
+My personal take is that practically all languages leverage at least the severely degenerate case of dependent types not just pascal. In C languages, arrays often degenerate into [ ] or even worse pointer types if you pass them into functions. However, arrays within a single function and even structs can be given a length [6]. This length must be known at compile time however showing the strict phase distinction of C. In pre C++-11 compilers, similar limitations exist. However, as of C++17, we now have constexpr functions which allow us to compute values at compile time (including the array type length) using basically anything in the language and getting more permissive every edition. This is shows ideas of dependent types have influences even on languages as far from the light of type theory as can be. In C++ circles, they have the same debates about how decidability is overrated as we had in class. It seems arbitrary to stop at decidable and not something like polynomial so we might as well allow any computation that can be done at compilation time (i.e., no user input).
 
 \subsection*{Families of types classify families of types}
 
@@ -98,14 +98,16 @@ $$\Gamma [E/x](y : Seq(x) \Gamma') \entails [][E/x](x, y) : [E/x](A \times Seq(x
 These four ideas are the core of dependent type theory: (Note: This material seems slightly different from the 5 key points on the official notes for this week. They might actually be the same though as there were two bullet points for number three at one point in the talk. Go check those out on page 3: https://www.cs.cmu.edu/~rwh/courses/atpl/pdfs/dependency.pdf)
 \begin{enumerate}
     \item No entity without identity. i.e. equivalence judgments (that are equivalence relations) for both types and terms
-    \item Congruence
-    \[
-    \frac{\Gamma \entails \theta(M_1, \dots, M_n) \quad \forall i \in [n], \Gamma \entails M_i \equiv M'_i : A_i}{\Gamma \entails \theta(M_1, \dots, M_n) \equiv \Gamma \entails \theta(M'_1, \dots, M'_n) }
-    \]
-    \item Invariance. Substitution and Weakening respectively
-    \[
-        \frac{\Gamma \entails M : A \quad \Gamma \entails A \equiv B}{\Gamma \entails M : B} \quad \frac{}{\Gamma x : A \Gamma' \entails x : A}
-    \]
+    \item
+    \begin{mathpar}
+    \inferrule[$\theta$-Cong]{\Gamma \entails \theta(M_1, \dots, M_n) \\ \forall i \in [n], \Gamma \entails M_i \equiv M'_i : A_i}{\Gamma \entails \theta(M_1, \dots, M_n) \equiv \Gamma \entails \theta(M'_1, \dots, M'_n) }
+    \end{mathpar}
+    \item
+    \begin{mathpar}
+        \inferrule[Substitution Invariant]{\Gamma \entails M : A \\ \Gamma \entails A \equiv B}{\Gamma \entails M : B}
+        
+        \inferrule[Weakening Invariant]{\strut}{\Gamma x : A \Gamma' \entails x : A}
+    \end{mathpar}
     \item Admissibilities. Different implementers do this differently, but the takeaways are the same.
 
     if $\Gamma \entails M : A$ then $\Gamma \entails A type$. This is a common presupposition when working with dependent type theory. It is similiar to the constraint that the context is well-formed.
@@ -169,39 +171,62 @@ This is directly from page 10 of the notes.
 
 This is in contrast to an admissible cumulatively where the judgments are instead replaced with implications. A third choice common when subtyping is in play is to use subsumption rules often denoted with the symbol $\sqsubset$.
 
-These things are related to the large cardinality axioms in set theory. In both these, we handle universes. This begins a discussion of how cardinality is not a useful metric in constructive logic. Bob mentions Cohen's power set of the naturals result and how you can generate seemingly endless subsets of the reals that are still the power set of the naturals. There is no canonical form then for these cardinality rules. Bob then finishes with a fun story about meeting Paul Cohen himself and the silliness of a set theory powered programming language.
+These things are related to the large cardinality axioms in set theory. In both these, we handle universes. This begins a discussion of how cardinality is not a useful metric in constructive logic. Class mentioned Cohen's power set of the naturals result and how you can generate seemingly endless subsets of the reals that are still the power set of the naturals. There is no canonical form then for these cardinality rules. Bob then finishes with a fun story about meeting Paul Cohen himself and the silliness of a set theory powered programming language.
 
 \subsection*{Asides}
 It was mentioned that the type theory internalizes judgment. This is similar to the interpretation of types over lambdas being related to uncurrying. $\Gamma \entails A \rightarrow B \cong \Gamma, A \entails B$
 \section*{Using dependent types}
-$$\frac{}{\text{bool type}} \quad \frac{}{true : bool} \quad \frac{}{false : bool} \quad \frac{\Gamma \entails M : bool \quad \Gamma \entails N : A \quad \Gamma \entails P : A}{if_{(A)} (M; N; P) : A}$$
+\begin{mathpar}
+\defrule[bool type][sta:bool]{\strut}{\text{bool type}}
+
+\defrule[true-I][sta:true]{\strut}{true : bool}
+
+\defrule[falseI][sta:false]{}{false : bool}
+
+\defrule[bool-E][sta:boolelim]{\Gamma \entails M : bool \\ \Gamma \entails N : A \\ \Gamma \entails P : A}{if_{(A)} (M; N; P) : A}
+\end{mathpar}
 Note that the notation (A) is only needed to assist in type synthesis.
-$$\frac{}{if(true; N; P) \equiv N : A}$$
-$$\frac{}{if(false; N; P)  \equiv P : A}$$
-$$\frac{}{if(M; true; false) \equiv M : A}$$
+\begin{mathpar}
+\defrule[$\beta$-true]{}{if(true; N; P) \equiv N : A}
+\defrule[$\beta$-false]{}{if(false; N; P)  \equiv P : A}
+\defrule[$\eta$]{}{if(M; true; false) \equiv M : A}
+\end{mathpar}
 As in the notes, there is an argument over whether or not to include the induction principles for positive types like our boolean. While in one case they are valid substituting in for each branch and can allow us to derive true statements, they result in exponential blowup of our code. This has a relationship to solving binary decision diagrams and sat solving. Where we draw the line on what we want the computer to solve from here is blurry.
-$$\frac{\Gamma \entails M : bool \quad \Gamma \entails N : A \quad \Gamma \entails P : A}{If(M; N; P)\text{ type}}$$
+$$\inferrule[If type]{\Gamma \entails M : bool \\ \Gamma \entails N : A \\ \Gamma \entails P : A}{If(M; N; P)\text{ type}}$$
 It is a bad move to derive that the if type has the uppercase If type as determining whether the two branches are indeed the same takes some serious proof. We want to still be able to say they have a common types if they are the same.
 \subsection*{Dependent functions AKA Pi types AKA $\forall$}
-$$\frac{\Gamma \entails A_1 \text{ type} \quad \Gamma, x : A_1 \entails A_2}{\Gamma \entails x : A_1 \rightarrow A_2 \text{ type}} \quad \frac{\Gamma \entails A_1 \text{ type} \quad \Gamma, x : A, \entails A_2 \text{ type}}{\Gamma \entails \lambda x . M_2 : (x : A_1 \rightarrow A_2)}$$
-$$\frac{\Gamma \entails M_1 : (x : A_1 \rightarrow A_2) \quad \Gamma \entails M_2 : A_1}{\Gamma \entails ap(M_1, M_2) : [M_2 / x] A_2}$$
-$$\beta - ap(\lambda x . M_2 , M_1) \equiv [M_1 / x] M_2 : [M_1 / x] A_2$$
-$$\eta - \lambda x . ap (M, x) \equiv M : (x : A_1 \rightarrow A_2?)$$
+\begin{mathpar}
+\inferrule[$\Pi$-type]{\Gamma \entails A_1 \text{ type} \\ \Gamma, x : A_1 \entails A_2}{\Gamma \entails x : A_1 \rightarrow A_2 \text{ type}}
+
+\inferrule[$\Pi$-I]{\Gamma \entails A_1 \text{ type} \\ \Gamma, x : A, \entails A_2 \text{ type}}{\Gamma \entails \lambda x . M_2 : (x : A_1 \rightarrow A_2)}
+
+\inferrule[$\Pi$-E]{\Gamma \entails M_1 : (x : A_1 \rightarrow A_2) \\ \Gamma \entails M_2 : A_1}{\Gamma \entails ap(M_1, M_2) : [M_2 / x] A_2}
+
+\beta - ap(\lambda x . M_2 , M_1) \equiv [M_1 / x] M_2 : [M_1 / x] A_2
+
+\eta - \lambda x . ap (M, x) \equiv M : (x : A_1 \rightarrow A_2?)
+\end{mathpar}
 Note: The official notes do not include parentheses around the Pi types, but I added them because the : operator is used for two different sorts of judgments.
 
 As a matter of hygiene, we restrict our Pi types to only admit constructive proofs of existence. In other words, we cannot prove existence using $\neg \forall$.
 
 \subsection*{How does dependency arise in the first place}
 Equality types (or a better description is equality relations) are equivalent to propositional formulas. This is related to Church's Type Theory, but despite Church's overall brilliance, this type theory is very bad in Church's formulation.
-$$\frac{(\Gamma \entails A \text{ type})  \quad \Gamma \entails M, N : A}{\Gamma \entails M \equiv _A N}$$
-
+$$\inferrule[]{(\Gamma \entails A \text{ type})  \\ \Gamma \entails M, N : A}{\Gamma \entails M \equiv _A N}$$
 $M \equiv _A N$ is formulated as $Id_A(M, N)$
-$$\frac{\Gamma \entails M, N : A}{\Gamma \entails Id_A (M, N) \text{ type}} \quad \frac{\Gamma \entails M : A}{\Gamma \entails refl_A (M) : Id_A(M, M)} \quad \frac{\Gamma \entails M \equiv N : A}{\Gamma \entails refl_A(M) : Id_A(M, M)}$$
+
+\begin{mathpar}
+\inferrule[]{\Gamma \entails M, N : A}{\Gamma \entails Id_A (M, N) \text{ type}} 
+
+\inferrule[]{\Gamma \entails M : A}{\Gamma \entails refl_A (M) : Id_A(M, M)} 
+
+\inferrule[]{\Gamma \entails M \equiv N : A}{\Gamma \entails refl_A(M) : Id_A(M, M)}$$
+\end{mathpar}
 
 In other words, equality is defined as the least reflexive relation. The type Id internalizes our prior notion of equality.
 
 Absolutely crazy induction rule for equality.
-$$\frac{\Gamma, x, y : A, z : Id_A (x, y) \entails C type \quad \Gamma \entails p : Id_A(M, N) \quad \Gamma, x : A \entails Q : [x, x, refl_A (x) / x, y, z] C}{\Gamma J(M; xyz.Q) \quad _. [M, N, P / x, y, z] C}$$
+$$\inferrule[$\equiv_A$ Induction]{\Gamma, x, y : A, z : Id_A (x, y) \entails C type \\ \Gamma \entails p : Id_A(M, N) \\ \Gamma, x : A \entails Q : [x, x, refl_A (x) / x, y, z] C}{\Gamma J(M; xyz.Q) \\ _. [M, N, P / x, y, z] C}$$
 Which leads to this equivalence
 $$J(refl_A(M); x, y, z.Q) \equiv [M, M, refl_A(M) / x, y, z] Q : [M, M, refl_A(M) / x, y, z] C$$
 At this point, class came to an abrupt end to be picked up next Thursday.
