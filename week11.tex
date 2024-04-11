@@ -44,20 +44,15 @@ Dependent type theory has roots as far back as intuitionistic logic itself. It i
     \Gamma \entails M : A \quad & \Gamma \entails M \equiv M' : A \\
 \end{align*}
 We not only have families indexed by some context gamma in the elements, but also the types. This implies that element-hood is inseparable from type-hood / type equality. There is no longer a phase distinction between the two. It is worth noting that term equality influences type equality as in
-$$\Gamma \entails Seq(7) \equiv Seq(7) type$$
+$$\Gamma \entails \eqTp{Seq(7)}{Seq(7)}$$
 relies on the equality of the term 7, but equality is syntactically incorrect for terms of two different types.
 
-Typing is now Context Sensitive conciliations on well-formed programs. (well-formedness is now checked before types)
-
-Execution is still a transition system on states
-
+Typing is now a context-sensitive consideration on well-formed programs (where well-formedness is now checked before types).
+Execution is still a transition system on states.
 Safety is still based on programs structured by types. We have some minimal sensibility conditions that apply before typechecking. After, types are special cases of structured constructors.
 
-eg) list : Type $\rightarrow$ Type
-
-``Type $\rightarrow$ Type'' is a kind 
-
-``list'' is a constructor.
+For example, consider $\mathsf{list} : \mathsf{Type} \rightarrow \mathsf{Type}$.
+$\mathsf{Type} \rightarrow \mathsf{Type}$ is a kind, and $\mathsf{list}$ is a constructor.
 
 \subsection*{Aside: Pascal and dependent types in ``boring'' languages}
 
@@ -71,29 +66,29 @@ What does it mean to have a family of types?
 
 Well, we can think of our previous type systems as being a degenerate case of dependent type theory where the context is empty.
 
-$$\epsilon \entails 3 : nat$$
+$$\epsilon \entails 3 : \natTy$$
 
 Whereas with elements in the context / families, we have:
 
-$$x : Nat \entails Seq(2 * x) \equiv Seq(x + x) type$$
+$$x : \natTy \entails \eqTp{Seq(2 * x)}{Seq(x + x)}$$
 
 With families, we now wish to prove ``functionality'' of our types. Whereas before we could evaluate if two types are equal based on alpha-equivalence, we must now substitute in equal terms and prove.
 
-If $M \equiv N : Nat$ then $Seq(2 * M) \equiv Seq(N + N) type$
+If $M \equiv N : \natTy$ then $\eqTp{Seq(2 * M)}{Seq(N + N)}$.
 
 While many people praise a specific form of dependent types, the most common form does not allow us to prove an equation as simple as the above. A more sensible view is to allow for any computation in the type system and ignore the problems of undecidability.
 
 \subsection*{Weakening}
 We would like the following to be true:
-$$\Gamma x : A \Gamma' \entails x \equiv x: A$$
-x is a derivation in the middle of the context however it still holds despite this.  We would like to maintain the invariant that if $\Gamma \entails M : A$, then $\Gamma \entails A type$. However, if we naively substitute from our x into the term we are type checking, our types may no longer make sense. Consider
-$$\Gamma x : A, y : Seq(x) \Gamma' \entails (x, y) : A \times Seq(x)$$
+$$\Gamma, x : A, \Gamma' \entails x \equiv x: A$$
+x is a derivation in the middle of the context however it still holds despite this.  We would like to maintain the invariant that if $\Gamma \entails M : A$, then $\Gamma \entails \isTp{A}$. However, if we naively substitute from our x into the term we are type checking, our types may no longer make sense. Consider
+$$\Gamma x : A, y : Seq(x), \Gamma' \entails (x, y) : A \times Seq(x)$$
 \begin{center} \textbf{Incorrect Substitution:} \end{center}
-$$\Gamma y : Seq(x) \Gamma' \entails (E, y) : A \times Seq(x)$$
+$$\Gamma, y : Seq(x), \Gamma' \entails (E, y) : A \times Seq(x)$$
 Except in the second version, we no longer have a meaning for x in the context or in the type signature. To remedy this, we must substitute into the typing context that occurs after x, $\Gamma$' as well as the type signature
-$$\Gamma x : A, y : Seq(x) \Gamma' \entails (x, y) : A \times Seq(x)$$
+$$\Gamma, x : A, y : Seq(x), \Gamma' \entails (x, y) : A \times Seq(x)$$
 \begin{center} \textbf{Substitution:} \end{center}
-$$\Gamma [E/x](y : Seq(x) \Gamma') \entails [][E/x](x, y) : [E/x](A \times Seq(x))$$
+$$\Gamma [E/x](y : Seq(x), \Gamma') \entails [][E/x](x, y) : [E/x](A \times Seq(x))$$
 \section*{Second class on dependent type theory}
 These four ideas are the core of dependent type theory: (Note: This material seems slightly different from the 5 key points on the official notes for this week. They might actually be the same though as there were two bullet points for number three at one point in the talk. Go check those out on page 3: https://www.cs.cmu.edu/~rwh/courses/atpl/pdfs/dependency.pdf)
 \begin{enumerate}
@@ -105,18 +100,18 @@ These four ideas are the core of dependent type theory: (Note: This material see
     \item
     \begin{mathpar}
         \inferrule[Substitution Invariant]{\Gamma \entails M : A \\ \Gamma \entails A \equiv B}{\Gamma \entails M : B}
-        
+
         \inferrule[Weakening Invariant]{\strut}{\Gamma x : A \Gamma' \entails x : A}
     \end{mathpar}
     \item Admissibilities. Different implementers do this differently, but the takeaways are the same.
 
-    if $\Gamma \entails M : A$ then $\Gamma \entails A type$. This is a common presupposition when working with dependent type theory. It is similiar to the constraint that the context is well-formed.
+    if $\Gamma \entails M : A$ then $\Gamma \entails \isTp{A}$. This is a common presupposition when working with dependent type theory. It is similiar to the constraint that the context is well-formed.
 
     (NOTE: A Presupposition is something we wish to be true to make the proofs and theory easier, but instead of deriving from judgments each time we assert it, it must be true as a precondition.)
 
-    If $\Gamma x : A \Gamma' \entails J$ and $\Gamma \entails M : A$ then $\Gamma [M / x] \Gamma' \entails [M/x]J$. The notation for J is confusing at first. J represents one of the four judgments that are core to dependent type theory. It could be a derivation that something is a type or a derivation that something has some other type.
+    If $\Gamma, x : A, \Gamma' \entails J$ and $\Gamma \entails M : A$ then $\Gamma, [M / x], \Gamma' \entails [M/x]J$. The notation for J is confusing at first. J represents one of the four judgments that are core to dependent type theory. It could be a derivation that something is a type or a derivation that something has some other type.
 
-    The same exact logic can be applied to equations. If $\Gamma x : A \Gamma' \entails J : B$ and $\Gamma \entails M \equiv N : A$ then $\Gamma [M / x] \Gamma' \entails [M / x] J \equiv [N / x] J: [M/x]B$
+    The same exact logic can be applied to equations. If $\Gamma, x : A, \Gamma' \entails J : B$ and $\Gamma \entails M \equiv N : A$ then $\Gamma, [M / x], \Gamma' \entails [M / x] J \equiv [N / x] J: [M/x]B$
 
 \end{enumerate}
 
@@ -127,7 +122,7 @@ If $\Gamma' \entails \gamma : \Gamma$ and $\Gamma \entails J$ then $\Gamma' \ent
 When proving either substitution or weakening, one must use the other one. This means the actual proof is quite involved. The issue arises when we try to invoke the IH when under the binder of a lambda.
 
 \section*{Predicativity and Universes}
-When reasoning about logics, it can sometime arise that the definitions and application are circular. Martin-Lof made some of these mistakes when formalizing his type theory. This opened the way for Girard's paradox (I think the method is also vulnerable to Burali-Forti paradox). The solution to this is was developed by Whitehead and Russel. They developed a hierarchy of types all indexed by increasing natural numbers called cumulatively.
+When reasoning about logics, it can sometime arise that the definitions and application are circular. Martin-Lof made some of these mistakes when formalizing his type theory. This opened the way for Girard's paradox (I think the method is also vulnerable to Burali-Forti paradox). The solution to this is was developed by Whitehead and Russell. They developed a hierarchy of types all indexed by increasing natural numbers called cumulatively.
 
 As this model is quite cumbersome to write and reason about, this gives rise to many languages adding tactics and the like as a type of metaprogramming to save the user time. Professor is not a big fan of prolific use of tactics as it often leads to much messier proofs when elaborated making it harder to reason about the actual proof underneath. It is partially for this reason we use Agda rather then a tactic based language.
 \begin{mathpar}
@@ -192,13 +187,13 @@ Note that the notation (A) is only needed to assist in type synthesis.
 \defrule[$\eta$]{}{if(M; true; false) \equiv M : A}
 \end{mathpar}
 As in the notes, there is an argument over whether or not to include the induction principles for positive types like our boolean. While in one case they are valid substituting in for each branch and can allow us to derive true statements, they result in exponential blowup of our code. This has a relationship to solving binary decision diagrams and sat solving. Where we draw the line on what we want the computer to solve from here is blurry.
-$$\inferrule[If type]{\Gamma \entails M : bool \\ \Gamma \entails N : A \\ \Gamma \entails P : A}{If(M; N; P)\text{ type}}$$
+$$\inferrule[If type]{\Gamma \entails M : bool \\ \Gamma \entails N : A \\ \Gamma \entails P : A}{\isTp{If(M; N; P)}}$$
 It is a bad move to derive that the if type has the uppercase If type as determining whether the two branches are indeed the same takes some serious proof. We want to still be able to say they have a common types if they are the same.
 \subsection*{Dependent functions AKA Pi types AKA $\forall$}
 \begin{mathpar}
-\inferrule[$\Pi$-type]{\Gamma \entails A_1 \text{ type} \\ \Gamma, x : A_1 \entails A_2}{\Gamma \entails x : A_1 \rightarrow A_2 \text{ type}}
+\inferrule[$\Pi$-type]{\Gamma \entails  \isTp{A_1} \\ \Gamma, x : A_1 \entails A_2}{\Gamma \entails x : A_1 \rightarrow  \isTp{A_2}}
 
-\inferrule[$\Pi$-I]{\Gamma \entails A_1 \text{ type} \\ \Gamma, x : A, \entails A_2 \text{ type}}{\Gamma \entails \lambda x . M_2 : (x : A_1 \rightarrow A_2)}
+\inferrule[$\Pi$-I]{\Gamma \entails  \isTp{A_1} \\ \Gamma, x : A, \entails  \isTp{A_2}}{\Gamma \entails \lambda x . M_2 : (x : A_1 \rightarrow A_2)}
 
 \inferrule[$\Pi$-E]{\Gamma \entails M_1 : (x : A_1 \rightarrow A_2) \\ \Gamma \entails M_2 : A_1}{\Gamma \entails ap(M_1, M_2) : [M_2 / x] A_2}
 
@@ -212,15 +207,15 @@ As a matter of hygiene, we restrict our Pi types to only admit constructive proo
 
 \subsection*{How does dependency arise in the first place}
 Equality types (or a better description is equality relations) are equivalent to propositional formulas. This is related to Church's Type Theory, but despite Church's overall brilliance, this type theory is very bad in Church's formulation.
-$$\inferrule[]{(\Gamma \entails A \text{ type})  \\ \Gamma \entails M, N : A}{\Gamma \entails M \equiv _A N}$$
+$$\inferrule[]{(\Gamma \entails \isTp{A})  \\ \Gamma \entails M, N : A}{\Gamma \entails M \equiv _A N}$$
 $M \equiv _A N$ is formulated as $Id_A(M, N)$
 
 \begin{mathpar}
-\inferrule[]{\Gamma \entails M, N : A}{\Gamma \entails Id_A (M, N) \text{ type}} 
+\inferrule[]{\Gamma \entails M, N : A}{\Gamma \entails \isTp{Id_A (M, N)}}
 
-\inferrule[]{\Gamma \entails M : A}{\Gamma \entails refl_A (M) : Id_A(M, M)} 
+\inferrule[]{\Gamma \entails M : A}{\Gamma \entails refl_A (M) : Id_A(M, M)}
 
-\inferrule[]{\Gamma \entails M \equiv N : A}{\Gamma \entails refl_A(M) : Id_A(M, M)}$$
+\inferrule[]{\Gamma \entails M \equiv N : A}{\Gamma \entails refl_A(M) : Id_A(M, M)}
 \end{mathpar}
 
 In other words, equality is defined as the least reflexive relation. The type Id internalizes our prior notion of equality.
@@ -229,6 +224,6 @@ Absolutely crazy induction rule for equality.
 $$\inferrule[$\equiv_A$ Induction]{\Gamma, x, y : A, z : Id_A (x, y) \entails C type \\ \Gamma \entails p : Id_A(M, N) \\ \Gamma, x : A \entails Q : [x, x, refl_A (x) / x, y, z] C}{\Gamma J(M; xyz.Q) \\ _. [M, N, P / x, y, z] C}$$
 Which leads to this equivalence
 $$J(refl_A(M); x, y, z.Q) \equiv [M, M, refl_A(M) / x, y, z] Q : [M, M, refl_A(M) / x, y, z] C$$
-At this point, class came to an abrupt end to be picked up next Thursday.
+At this point, class came to an abrupt end to be picked up next week.
 
 \end{document}
