@@ -1,0 +1,256 @@
+\documentclass[letterpaper]{article}
+
+\input{setup}
+\input{defns}
+
+\title{15-791 ATPL \\ Week 9 Notes}
+\author{Zach Battleman \and Parth Shastri}
+\date{\today}
+
+% slightly modified from pl-judgments.sty
+\NewDocumentCommand{\exEqOf}{m m m}{#1\mathrel{\doteq}#2 \in #3}
+\NewDocumentCommand{\compEqOf}{m m m}{#1\mathrel{\doteq}#2\ \widetilde{\in}\ #3}
+\NewDocumentCommand{\exEqOfPhase}{m m m m}{#1\mathrel{\doteq}#2 \in #3 [#4]}
+\NewDocumentCommand{\compEqOfPhase}{m m m m}{#1\mathrel{\doteq}#2\ \widetilde{\in}\ #3 [#4]}
+\newcommand{\EXT}{\textsf{EXT}}
+\newcommand{\monC}{\mathbb{C}}
+\newcommand{\memState}[2]{\left\{ #1 \parallel #2 \right\}}
+\newcommand{\mapsVal}[2]{#1 \hookrightarrow #2}
+\newcommand{\letvEx}[3]{\Abt{\Opn{letv}}(#1;\Abs<#2>{#3})}
+\newcommand{\eqExact}[3]{#1 \doteq #2 \in #3}
+
+\newcommand\CC{\mathcal C}
+\newcommand\DD{\mathcal D}
+\NewDocumentCommand{\dcl}{m m m}{\mathtt{dcl}(#1; #2.\, #3)}
+\newcommand\dmemCons{\mathbin\Vert}
+\NewDocumentCommand{\dmemState}{m m m}{\nu\, #1 \,\{\, #2 \dmemCons #3 \,\}}
+
+% i had to
+\newcommand{\gyat}{\hat{\gamma}}
+% i know that there should be a way to get the superscript with the command in pl-judgments but i couldn't figure it out
+\NewDocumentCommand{\evalsToC}{m}{\Downarrow^{#1}}
+\NewDocumentCommand{\entailsPhase}{m}{\entails^{#1}}
+\NewDocumentCommand{\exEquivPhase}{m m m m m}{#1 \entailsPhase{#2} #3 \equiv #4 : #5}
+\NewDocumentCommand{\compEquivPhase}{m m m m m}{#1 \entailsPhase{#2} #3 \equiv #4 \wavydiv #5}
+\NewDocumentCommand{\stepEx}{m m}{\kw{step}^{#1} (#2)}
+\NewDocumentCommand{\stepsToC}{m}{\stackrel{\makebox[0pt]{\mbox{#1}}}{\stepsTo}}
+
+\begin{document}
+\maketitle
+\section{(re)Call By Push Value}
+    Recall from week 8 we introduced Call By Push Value and introduced basic effects. As a recap, we distinguish types into two classes ``computation'' and ``value'' distinguished by the fact that values ``are'' while computations ``do''. The types are given by the following grammar:
+    \begin{align*}
+        \text{Computations} \quad &X := X_1 \times X_2 \mid A \rightharpoonup X \mid F(A)\\
+        \text{Values} \quad &A := \top \mid A_1 + A_2 \mid A_1 \otimes A_2 \mid U(X)
+    \end{align*}
+    The major insight is we can ``swap'' between values and computations via the adjunction $F \dashv U$. The grammar of CBPV is very similar to your favorite monadic language, with the addition of the primitive value $\mathsf{Susp}(C)$ and the primitive computation $\mathsf{Force}(M)$. The details of Call By Push Value can be found in the Week 8 notes.
+\subsection{Adding Effects}
+    Last week, we saw the addition of basic effects to CBPV - a basic form of I/O and mutable state, in particular. This week, we explore a formalization of effects via logical relations. In particular we show the usual slew of theorems for the exact equality relation in the setting of CBPV with mutable state.
+
+\section{Exact Equality With Effects}
+In order to justify these definitions of equivalence, as per usual, we introduce a new notion of exact equality given in the following manner by induction on typing. We provide examples for cases which have not been seen before or are worth repeating. Note, these rules are modified from what was presented in lecture, in light of a reformulation given after the fact.
+\begin{align*}
+    \exEqOf{M}{M'}{\thunkTy{X}} \text{ iff }& M \Downarrow \suspEx*{C}, M' \Downarrow \suspEx*{C'}, \exEqOf{C}{C'}{X}\\
+    \exEqOf{C}{C'}{\freeTy{A}} \text{ iff }& \exEqOf{\mu}{\mu'}{\Sigma} \text{ implies }\\
+    &\mu \Vert C \stepsTo^* \mu_1 \Vert \retEx*{M},\\
+    & \mu' \Vert C' \stepsTo^* \mu_1' \Vert \retEx*{M'},\\
+    & \mu_1 \equiv \mu_1' : \Sigma,\\
+    & \exEqOf{M}{M'}{A}\\
+    \exEqOf{C}{C'}{A \rightharpoonup X} \text{ iff }& \exEqOf{M}{M'}{A} \text{ implies} \exEqOf{\appEx*{C}{M}}{\appEx*{C'}{M'}}{X}\\
+    \exEqOf{\mu}{\mu'}{\Sigma} \text{ iff }& \Sigma \entails a \sim A \text{ implies } \exEqOf{\mu(a)}{\mu'(a)}{A}
+\end{align*}
+
+Of note is the premise of the second rule: the quantification over all $\exEqOf{\mu}{\mu'}{\Sigma}$. In particular, as of now $\mu$ can be completely arbitrary and thus memory cells can contain copies of $C$ and $C'$! This is an issue as as it currently stands our inductive definition is not well-defined! To solve this, we restrict $\Sigma$ to only be over ground types, and with the following theorem the issue is resolved.
+\begin{theorem}
+    If $A$ is ground, and $\exEqOf{M}{M'}{A}$ then $\cdot \vdash M \equiv M' : A$.
+\end{theorem}
+\subsection{Open Terms}
+As per usual, we extend to open terms via substitutions. That is, we have
+$$\Gamma \gg \exEqOf{M}{M'}{A} \text{ iff } \exEqOf{\gamma}{\gamma'}{\Gamma} \text{ implies } \exEqOf{\hat{\gamma}(M)}{\widehat{\gamma'}(M')}{A} $$ 
+and similar for computation types.
+\subsection{Reflexivity}
+As normal, we get the following theorem
+\begin{theorem} Reflexivity
+
+    \begin{enumerate}
+        \item If $\Gamma \vdash M : A$ then $\Gamma \gg \exEqOf{M}{M}{A}$
+        \item If $\Gamma \vdash C : X$ then $\Gamma \gg \exEqOf{C}{C}{X}$
+    \end{enumerate}
+\end{theorem}
+\begin{proof} (Sketch)
+
+    As per usual, we proceed by induction on the typing derivation. In the spirit of this week, we focus on effectful statics. We fix an ambient $\Gamma$, $\Sigma$ and $\exEqOf{\gamma}{\gamma'}$
+    \begin{itemize}
+        \item[] \textsc{Get}
+        \[
+            \infer[]{\Gamma \vdash \getCmd<a> : \freeTy{A} }{\Sigma \vdash a \sim A}
+        \]
+        Fix $\exEqOf{\mu}{\mu'}{\Sigma}$.
+        \begin{align*}
+            \mu \Vert \hat{\gamma}(\getCmd<a>)
+            &= \mu \Vert \getCmd<a>\\
+            &\stepsTo \mu \Vert \retEx*{V} \tag{$\mu(a) = V$}
+        \end{align*}
+        Similarly, $\mu \Vert \widehat{\gamma'}(\getCmd<a>) \stepsTo \mu \Vert \retEx*{V'}$ with $\mu'(a) = V'$. Since $\mu$ and $\mu'$ were exactly equal from the outset, that goal is discharged and we must simply show that $\exEqOf{V}{V'}{A}$ which we know as $\mu(a) = V$ and $\mu'(a) = V'$ with $\mu$ exactly equal to $\mu'$.
+
+        \item[] \textsc{Set}
+        \[
+            \infer[]{\Gamma \vdash \setCmd<a>{M} : \freeTy{A} }{\Sigma \vdash a \sim A & \Gamma \vdash M : A}
+        \]
+        Again, fix $\exEqOf{\mu}{\mu'}{\Sigma}$. Again, stepping the LHS we have
+        \begin{align*}
+            \mu \Vert \hat{\gamma}(\setCmd<a>{M})
+            &= \mu \Vert \setCmd<a>{\hat{\gamma}(M)}\\
+            &\stepsTo \mu[a \hookrightarrow  \hat{\gamma}(V)] \Vert \retEx*{\hat{\gamma}(V)}
+        \end{align*}
+        Similary, the RHS $ \mu' \Vert \widehat{\gamma'}(\setCmd<a>{M}) \stepsTo \mu'[a \hookrightarrow  \widehat{\gamma'}(V)] \Vert \retEx*{\widehat{\gamma'}(V)}$. Indeed we must have that $\exEqOf{\mu[a \hookrightarrow \hat{\gamma}(V)]}{\mu'[a \hookrightarrow \widehat{\gamma'}(V)]}{\Sigma}$ as it is known that $\exEqOf{\mu}{\mu'}{\Sigma}$ and the only extension $a$ gets mapped to $\hat{\gamma}(V)$ and $\widehat{\gamma'}(V)$ which are exactly equal by definition of $\Gamma$ and the IH which gives us $\Gamma \gg \exEqOf{M}{M}{A}$ and thus $\Gamma \gg \exEqOf{V}{V}{A}$. The last goal requires us to show that $\exEqOf{\hat{\gamma}(V)}{\widehat{\gamma'}(V)}{A}$ which was previously discussed.
+    \end{itemize}
+\end{proof}
+\subsection{The Fundamental Theorem}
+As per usual, we now justify our notion of equivalence by showing that equivalence implies exact equality. 
+\begin{theorem} Fundamental Theorem of Logical Relations
+
+    \begin{enumerate}
+        \item If $\Gamma \vdash M \equiv M' : A$ then $\Gamma \gg \exEqOf{M}{M'}{A}$
+        \item If $\Gamma \vdash C \equiv C' : X$ then $\Gamma \gg \exEqOf{C}{C'}{X}$
+    \end{enumerate}
+\end{theorem}
+\begin{proof} (Sketch)
+
+    As normal, we prove this by induction on derivations. Because of the focus for this week, we demonstrate a representative case involving effectful equations. We fix an ambient $\Gamma, \Sigma$ and $\exEqOf{\gamma}{\gamma'}{\Gamma}$
+\begin{itemize}
+    \item[] \textsc{E-Get-Set-Same}:
+    
+        We are given the rule
+        \[
+        \infer[]
+    { \Gamma \entails[\Sigma]{\bndEx*{\getCmd<a>}{x}{\setCmd<a>{x}} \equiv \getCmd<a>} : \freeTy{A} } { \Sigma \entails{\hasTp{a}{A}} }
+        \]
+        Our goal is to show that $\exEqOf{\hat{\gamma}(\bndEx*{\getCmd<a>}{x}{\setCmd<a>{x}})}{\widehat{\gamma'}(\getCmd<a>)}{\freeTy{A}}$. To show this, we must show that for all $\exEqOf{\mu}{\mu'}{\Sigma}$, that
+        \begin{enumerate}
+            \item $\mu \Vert C \stepsTo^* \mu_1 \Vert \retEx*{M}$\\
+            \item $\mu' \Vert C' \stepsTo^* \mu_1' \Vert \retEx*{M'}$\\
+            \item $\mu_1 \equiv \mu_1' : \Sigma$\\
+            \item $\exEqOf{M}{M'}{A}$\\
+        \end{enumerate}
+        We do this by simply stepping the terms. Starting with the left, we have 
+        \begin{align*}
+            \mu \Vert \hat{\gamma}(\bndEx*{\getCmd<a>}{x}{\setCmd<a>{x}}) 
+            &\stepsTo \mu \Vert \hat{\gamma}(\bndEx*{\retEx*{V}}{x}{\setCmd<a>{x}})\\
+            &\stepsTo  \mu \Vert \hat{\gamma}(\setCmd<a>{V})\\
+            &\stepsTo \mu[a \hookrightarrow V]\hat{\gamma}(\retEx*{V})\\
+            &= \mu \Vert \hat{\gamma}(\retEx*{V})\\
+            &=\mu \Vert\retEx*{\hat{\gamma}(V)}\\
+            &= \mu \Vert\retEx*{V}\\
+        \end{align*}
+        The second to last last equality goes through because we know $\mu$, prior to be extended at $a$, has $\mu(a) = V$ and the last one works because we know $V$ is closed.
+        Similarly, for the LHS, we have: 
+        \begin{align*}
+            \mu' \Vert \widehat{\gamma'}(\getCmd<a>) 
+            &= \mu' \Vert \getCmd<a>\\
+            &\stepsTo \mu' \Vert \retEx*{V'}\\
+            &= \mu' \Vert \retEx*{V'}
+        \end{align*}
+        Now, to verify the claims, since $\mu \equiv \mu' : \Sigma$ at the outset, we satisfy point $3$. To satisfy point $3$, we must show that $\exEqOf{V}{V'}{A}$. Indeed, since $V = \mu(a)$ and $V' = \mu'(a)$, and we know that $\exEqOf{\mu}{\mu'}{\Sigma}$, we must have $\exEqOf{V}{V'}{A}$.
+\end{itemize}
+\end{proof}
+
+\section{The Meaning of Equality}
+
+As we add more complicated effects, we will encounter limitations of the logical relations approach.
+We have previously seen that definitional equalities are justified in terms of exact equality.
+Just like how definitional equality can be strictly weaker than exact equality when constructs like the natural numbers are added in, definitions of exact equality can too become unable to show all of the equations we want.
+This begs the question: What does it mean for an equality to be true?
+
+This is a deep philosophical question, and the solution proposed by Leibniz is that two things are equal if we cannot tell them apart.
+We certainly expect that if two things are equal, then we cannot tell them apart, and Leibniz's Principle says that equality is the coarsest such relation.
+(Any other relation which satisfies this property would necessarily make finer distinctions, and would be called a finer relation.)
+
+In the spirit of Leibniz's Principle, we define the ``master" notion of equality, observational equivalence, to be the coarsest consistent congruence relation.
+Consistency means that things that we know are distinct are not related, namely that \(\yesEx\) and \(\noEx\) are distinct.
+Congruence means that the term-forming operations are compatible with the relation, since we would expect equal terms to remain equal when e.g. lambdas are placed in front of them.
+Consistency and congruence are necessary for practical use, while the requirement that the relation be the coarsest is what makes observational equivalence canonical.
+
+We can give a concrete definition of observational equivalence as saying two terms are equal if replacing one with the other in any closed program will yield the same answer.
+To make this more formal, we will make use of the notion of program fragments.
+
+\begin{definition}
+A \emph{program fragment}, written \(\CC\{-\}\), is a closed term of answer type with a hole in it.
+We can substitute a term \(M\) into a program fragment \(\CC\{-\}\), denoted \(\CC\{M\}\), by replacing the hole with term, deliberately capturing variables.
+\end{definition}
+
+The variable capture is important to correctly deal with the equality of open terms.
+We can straightforwardly define a typing judgment for program fragments, \(\Gamma' \entails \CC\{-\} : (\Gamma, A) \rightsquigarrow B\), with the meaning that \(\CC\{-\}\) is a program fragment such that if \(\Gamma \entails \isOf{M}{A}\), then \(\Gamma' \entails \isOf{\CC\{M\}}{B}\).
+
+\begin{definition}[Observational Equivalence]
+\[\isOf{M \cong M'}{A} \; [\Gamma] \quad\text{iff}\quad \forall\, \CC\{-\} : (\Gamma, A) \rightsquigarrow \ansTy,\, \CC\{M\} \downarrow \CC\{M'\}\]
+where \(\CC{M} \downarrow \CC{M'}\) means that \(\CC\{M\}\) and \(\CC\{M'\}\) evaluate to the same answer.
+\end{definition}
+
+The more familiar-looking notation \(\Gamma \entails \isOf{M \cong M'}{A}\) is misleading, since it does not derive its meaning from substitution, so we use the Kripke-style notation \(\isOf{M \cong M'}{A} \; [\Gamma]\) instead.
+
+\begin{theorem}
+Observational equivalence is the Coarsest Consistent Congruence.
+\end{theorem}
+\begin{proof}[Proof (Sketch)]
+\!
+\begin{itemize}
+\item Consistency follows from using an empty fragment.
+\item Congruence follows from the composition of contexts \(\DD\{\CC\{-\}\} = (\DD \circ \CC)\{-\}\).
+\item Since observational equivalence is defined as equating everything that cannot be told apart, it is the coarsest such relation.
+\end{itemize}
+\end{proof}
+
+Logical equivalence is a consistent congruence, where consistency follows from how it is defined at answer type, and congruence follows from the compatibility rules.
+Thus, logical equivalence is included in observational equivalence.
+In a purely functional setting, observational equivalence is the same as logical equivalence, which is why we have not needed it up until now.
+However, in an imperative setting, the inclusion can become strict, as logical equivalence will not be able to show that two programs which cannot be told apart are actually equal.
+Whwn we transition to dependent types, this becomes an issue of vital importance.
+
+\section{Declarations with Scope Extrusion}
+
+As an example of a more complicated effect, we consider an extension to the state effect by considering declarations that can dynamically add state, where the state outlives the scope of the declaration.
+
+The dynamics now are extended to keep track of the signature since it may now change over the course of execution.
+We add the following rule for declarations.
+\[\dmemState{\Sigma}{\mu}{\dcl{M}{a}{C}} \stepsTo \dmemState{\Sigma, a \sim A}{\mu \dmemCons \mapsVal{a}{V}}{C} \text{ where } M \Downarrow_\Sigma V\]
+
+We can then state the desired equations.
+\begin{align}
+\dcl{M}{a}{\retEx*{N}} &\equiv \retEx*{N} \\
+\dcl{M}{a}{\getCmd<a>} &\equiv \dcl{M}{a}{\retEx*{M}} \\
+\dcl{M}{a}{\setCmd<a>{N}} &\equiv \dcl{N}{a}{\retEx*{N}} \\
+\dcl{M}{a}{\dcl{N}{b}{C}} &\equiv \dcl{N}{b}{\dcl{M}{a}{C}} \\
+\bndEx*{\dcl{M}{a}{C}}{x}{C_2} &\equiv \dcl{M}{a}{\bndEx*{C_1}{x}{C_2}}
+\end{align}
+Equation (1) states that declaring an assignable without actually using it is the same as not declaring it at all.
+Equation (2) states that declaring an assignable an immediately getting its value is the same as simply declaring the assignable and returning the same term that we assigned to it.
+The result could then be simplified using equation (1).
+Equation (3) states that declaring an assignable and immediately setting its value is the same as simply declaring the assignable with the new expression, as long as the new expression does not reference the assignable itself.
+Equation (4) states that the order of declarations can be swapped.
+Equation (5) states that we can extend the scope of a declaration.
+
+We might wish to have an equation that applies when the declaration appears in the right hand side of a bind, but in the spirit of open endedness and anticipating additional effects, we do not add such an equation.
+
+\subsection{Logical Relations with Dynamic Generation}
+
+As hinted at previously, the method developed here will not be able to verify all of the equations that we want to be true.
+
+Because the signature \(\Sigma\) can change over the course of execution, the big idea is to treat them as possible worlds in Kripke-style logical relations, where \(\Sigma' \le \Sigma\) means that \(\Sigma'\) is an extension of \(\Sigma\).
+We will therefore mutually define \[\exEqOf{M}{M'}{A} \;[\Sigma] \qquad \exEqOf{C}{C'}{X} \;[\Sigma]\] and extend these to open terms \[\Gamma \gg_\Sigma \exEqOf{M}{M'}{A} \qquad \Gamma \gg_\Sigma \exEqOf{C}{C'}{X}\] in the usual way.
+The only interesting case for value types is \(\thunkTy{X}\), and while we might be tempted to define \(\exEqOf{M}{M'}{\thunkTy{X}} \;[\Sigma]\) as \(M \Downarrow_\Sigma \suspEx*{C}\), \(M' \Downarrow_\Sigma \suspEx*{C'}\), and \(\exEqOf{C}{C'}{X} \;[\Sigma]\), it is possible that declarations have occured by the time the thunk is forced (similarly to how the variable context can change by the time a function is applied), so we instead define it as \(\forall\, \Sigma' \le \Sigma,\, \exEqOf{C}{C'}{X} \;[\Sigma']\).
+
+For the computation types, the only interesting case is \(\freeTy{A}\).
+We need to keep in mind that we want the usual properties of anti-monotonicity and head expansion, so we start out by defining \(\exEqOf{C}{C'}{\freeTy{A}} \;[\Sigma]\) as \(\mu \equiv \mu' : \Sigma\) implies that \(\dmemState{\Sigma}{\mu}{C} \stepsTo^* \dmemState{\Sigma_1}{\mu_1}{\retEx*{M}}\) and \(\dmemState{\Sigma}{\mu'}{C'} \stepsTo^* \dmemState{\Sigma_1'}{\mu_1'}{\retEx*{M'}}\) with some condition on the final states.
+We want that \(\exEqOf{M}{M'}{A}\), but in which world?
+Since execution only adds new assignables and never removes them, we know that \(\Sigma_1 \le \Sigma\) and \(\Sigma_1' \le \Sigma\), but they can be distinct if they make different declarations.
+For now, we simply require that \(\Sigma_1 \equiv \Sigma_1'\), meaning that they are the same up to permutation.
+With this, we can add the conditions that the values in memory are the same, \(\mu_1 \equiv \mu_1' : \Sigma_1\), and \(\exEqOf{M}{M'}{A} \;[\Sigma_1]\).
+
+We can now prove the anti-monotonicity and head expansion lemmas, and prove the reflexivity theorem.
+When trying to prove equational validity, we will find that we are unable to prove equation (1).
+This is because our definition of exact equality does not equate programs which do not make the same declarations, even if they are observationally equivalent.
+Fixing this would require changing the definition of exact equality at \(\freeTy{A}\), relaxing the condition that \(\Sigma_1 \equiv \Sigma_1'\).
+
+\end{document}
+
