@@ -1,0 +1,120 @@
+\documentclass[11pt]{article}
+
+\input{setup}
+\input{defns}
+\title{15-791 ATPL \\ Week 14 Notes \\ Program Module}
+\author{Shengchao Yang}
+\date{\today}
+
+\newcommand*{\judge}[0]{\textbf{judge}}
+
+\begin{document}
+\maketitle{}
+\section*{Overview}
+This week we examine the theory of program modules as the application of dependent type theory with universes.
+Besides, we discuss the computational effects that program modules carry. Moreover, 
+we study the phase distinct between statics and dynamics of program modules.
+Lastly, we look into how to use logical framework briefly.
+\section*{Elaboration}
+For any full scale programming languages, it is important to distinguish 
+the underlying type system, which usually is a combination of statics and dynamics, from its presentation to the programmers.
+The procedure that translate the external language (abstract syntax) to the internal language (type theory) is called elaboration.
+
+The internal language is a type theory that has well-defined binding and variable scopes,
+which, usually, is not the case for the external language. 
+During the elaboration, the following things are done:
+\begin{itemize}
+    \item Scope Resolution. Variables may have the same name but belong to different scopes.
+    Thus, scope resolution specifies the scope of each identifier.
+    \item Type Inference. Type inference refers to the deduction of the type of expressions.
+    \item Type Classes. Type classes emphasize implicit program construction and
+    ad hoc polymorphism\footnote{https://www.cs.cmu.edu/~rwh/papers/mtc/short.pdf}. 
+    \item Conversion/Subtyping. Conversion is the process of a forgetful transformation where certain information is ignored.
+    For instance, an ORD signature requires two fields : a type \texttt{type t} and a comparison function \texttt{val leq : t * t -> bool}.
+    The Integer signature has more content than the ORD signature, but it can be converted to the ORD signature by extracting the relevant parts only.
+\end{itemize} 
+\section*{Extension Types}
+In ML modules, sharing specification is practical. Below is an example.
+\begin{verbatim}
+    signature ORDER =
+    sig
+        type t
+        val compare : t * t -> order
+    end
+
+    signature EQ =
+    sig
+        type t
+        val equal : t * t -> bool
+    end
+
+    signature COMB =
+    sig
+        structure Ord : ORDER
+        structure Eq  : EQ
+        sharing type Ord.t = Eq.t
+    end
+
+    structure Comb :> COMB =
+    struct
+        structure Ord : ORDER =
+        struct
+            type t = int
+            val compare = Int.compare
+        end
+
+        structure Eq : EQ =
+        struct
+            type t = int
+            val equal = (op=)
+        end
+    end
+\end{verbatim} 
+In the signature of COMB, we can make sure that \texttt{Ord.t} and \texttt{Eq.t} must be the same type. 
+To represent such sharing as a theoretical concept of equality, we introduce extension types as an internalization of judgmental equality.
+Below are the relevant rules for the static extent \texttt{STATIC}.
+\begin{rules}
+    \defrule[formation][formation]{\Gamma \vdash S\ \textbf{sig} \\ \Gamma \vdash M : S}{
+        \Gamma \vdash \{S | \text{STATIC} \hookrightarrow M \}\ \textbf{sig}
+    }
+    \\
+    \defrule[intro][intro]{\Gamma \vdash N\ \textbf{sig}\\ \Gamma, \text{STATIC} \vdash M \equiv N : S}{
+        \Gamma \vdash \text{in}(N) : \{S | \text{STATIC} \hookrightarrow M \}
+    }\\
+    \defrule[elim][elim]{\Gamma \vdash N : \{S | \text{STATIC} \hookrightarrow M \}}{
+        \Gamma \vdash \text{out}(N) : S
+    }
+    \qquad
+    \defrule[inver][inversion]{\Gamma \vdash N : \{S | \text{STATIC} \hookrightarrow M \}}{
+        \Gamma, \text{STATIC} \vdash \text{out}(N) \equiv M: S
+    }\\
+    \defrule[$\beta$][beta]{
+        \Gamma \vdash M : S
+    }{
+        \Gamma \vdash \text{out}(\text{in}(M)) \equiv M: S
+    }\qquad
+    \defrule[$\eta$][eta]{
+        \Gamma \vdash N : \{S | \text{STATIC} \hookrightarrow M \}
+    }{
+        \Gamma \vdash \text{in}(\text{out}(N)) \equiv N : \{S | \text{STATIC} \hookrightarrow M \}
+    }
+
+\end{rules}
+\section*{Logical Framework}
+Logical framework is a framework for defining logics (type theories). 
+Syntactic logical frameworks present logical systems by generators without relations. In other words, it codifies derivations and thus decidable.
+Semantic logical frameworks impose equations (definitional equalities) that may not be decidable.
+The semantic logical framework introduced in class is a dependently-typed language with a single universe of judgments (sorts) that involves dependency for types classes and has an extensional equality types with reflection.
+We use \judge\ as the objects of class and define G\"{o}del's T as the following:
+\begin{align*}
+    \textbf{tp} &: \judge \\
+    \textbf{el} &: \textbf{tp} \to \judge \\
+    \textbf{nat} &: \textbf{tp} \\
+    \textbf{zero} &: \textbf{el} (\textbf{nat}) \\
+    \textbf{succ} &: \textbf{el} (\textbf{nat}) \to \textbf{el} (\textbf{nat}) \\
+    \textbf{arr} &: \textbf{tp} \to \textbf{tp} \to \textbf{tp} \\
+    \textbf{lam} &: A, B : \textbf{tp} \to (\textbf{el} A \to \textbf{el} B) \to \textbf{el} (\textbf{arr} A B) \\
+    \textbf{app} &: A, B : \textbf{tp} \to \textbf{el} (\textbf{arr} A B) \to \textbf{el} A \to \textbf{el} B \\
+\end{align*}
+More of the details can be found in Harper(2021)\footnote{https://arxiv.org/pdf/2106.01484}.
+\end{document}
