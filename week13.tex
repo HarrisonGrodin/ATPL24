@@ -1,0 +1,121 @@
+\documentclass[11pt]{article}
+
+\input{setup}
+\input{defns}
+\title{15-791 ATPL \\ Week 13 Notes \\ Dependant type theory II}
+\author{Yosef Alsuhaibani}
+\date{\today}
+
+\newcommand*{\judge}[0]{\textbf{judge}}
+
+\begin{document}
+\maketitle{}
+\section*{Overview}
+In this weeks lectures, we laid the ground work for a pure dependant type theory, and talked more about equality and function extensibility. Later, we discussed an impure dependant type theory, and in the end of it all gone over a "how-to" guide to PL, reviewing the method we used to study different type theories. 
+
+\section*{Dependant type theories}
+A few important distinctions from previous theories:
+\begin{enumerate}
+    \item Contexts are ordered: As later terms' types can be dependent on previous terms, the context is of the form $P_1 : A,\, P_2 : A(P_1), \dots \vdash B : C$
+    \item Functions and products are now generalized to be dependant: Instead of the usual product $A \times B$ and a arrow $A \xrightarrow{} B$, they are now $(x : A) \times B(x)$, $(x : A) \xrightarrow{} B(x)$, $\exists (x : A). B$, and $\forall (x : A). B$
+    \item Elimination rules for positive types are dependant: an example of this is the $If(\--;\--,\--)$ type
+    \end{enumerate}
+\section*{Identity \& equality}
+Recall from last week the discussion of equality and the reflexive term:
+\begin{mathpar}
+\inferrule[]{\Gamma \entails M : A \quad \Gamma \entails N : A}{\Gamma \entails \isTp{Id_A (M, N)}}
+
+\inferrule[]{\Gamma \entails M : A}{\Gamma \entails refl_A (M) : Id_A(M, M)}
+
+\inferrule[]{\Gamma \entails M \equiv N : A}{\Gamma \entails refl_A(M) : Id_A(M, M)}
+\end{mathpar}
+Where we defined this relation as the least reflexive; one might consider to extend equality over functions by utilizing this definition and deriving a rule of the form:
+\begin{mathpar}
+\inferrule[funext?]{\Gamma, x : A \entails \_ : Id_B(f(x), g(x)) }{\Gamma \entails \_ : Id_{(x : A) \xrightarrow{} B}(f,g)}
+\end{mathpar}
+Unfortunately, this is not derivable; a workaround to get  function extensionality is to postulate/add an axiom that is exactly this rule into the language, and so we introduce a new term:
+\begin{mathpar}
+\inferrule[funext]{\Gamma, x : A \entails \_ : Id_B(f(x), g(x)) }{\Gamma \entails FUNEXT(f,g): (x : A) \xrightarrow{} Id_B(f(x),g(x))}
+\end{mathpar}
+However there is still a problem: we can't quite do anything with this  $J(FUNEXT(f,g), x.R)$! this term is a function, and we are back to square one. There are a few alternatives:
+\begin{enumerate}
+    \item Extensional equality: admitting that $Id_{\star}(\--,\--)$ is the ``wrong animal" for the job
+    \item Observational type theory: Equality should be dependant on the type!
+    \item Cubical type theory: Equality via reasoning about ``paths"
+\end{enumerate}
+\newpage
+\section*{Extensional equality}
+Changing the $Id_A$ primitive:
+\begin{mathpar}
+\inferrule[]{\isTp{A} \quad M : A \quad N : A }{\isTp{Eq_A(M,N)}}
+\qquad
+\inferrule[]{M \equiv N : A }{\star : Eq_A(M,N)}
+\qquad
+\inferrule[]{P : Eq_A(M,N) \quad Q : Eq_A(M,N)}{P \equiv Q : Eq_A(M,N)}
+\end{mathpar}
+This allows us to derive $Eq_{A \xrightarrow{} B}(f,g)$ as $(x : A) \xrightarrow{} (y : A) \xrightarrow{} Eq_A(x,y) \xrightarrow{} Eq_B(f(x),g(x)) $
+\section*{Observational type theory}
+Instead of trying to define equality, we can specialize over the type $A$, such that our equality is inductive on the structure of $A$; we didn't discuss more on this topic in class, instead we moved on to the third alternative.
+\section*{Cubical type theory}
+But first, a quick intro to universes
+\subsection*{Universes}
+The main goal is to develop a notion of ``computing" with ``types as data", for example:
+\begin{enumerate}
+    \item ``Polymorphism": where for a term $\Lambda A. \lambda (x : A). x : (?)$, what would the type of this expression be?
+    \item ``abstract types"(modules): where say for a module $[Nat,5] : (?)$
+\end{enumerate}
+Universes is exactly the notion we are looking for; an early formulation from ML in '71 is the following:
+\begin{mathpar}
+\inferrule[]{.}{\isTp{\mathcal{U}}}{}
+\qquad
+\inferrule[]{\isTp{A}}{A : \mathcal{U}}{}
+\qquad
+\inferrule[]{A : \mathcal{U}}{\isTp{A}}{}
+\end{mathpar}
+However it was possible to show that $\mathcal{U} : \mathcal{U}$ led to some inconsistency, and Girard proved it so; so in '73 a new revision came in that disallowed exactly that by introducing ``levels":
+\begin{mathpar}
+\inferrule[]{.}{\isTp{\mathcal{U_i}}_{i + 1}}{}
+\qquad
+\inferrule[]{\isTp{A}_i}{A : \mathcal{U}_i}{}
+\qquad
+\inferrule[]{A : \mathcal{U}_i}{\isTp{A}_i}{}
+\end{mathpar}
+Where the levels $i \geq 0$, and that each level $i$ is closed by bool, $Eq_A$, $x$,$\xrightarrow{}$, but not $U_i$ or any level higher. Some additional rules 
+\begin{mathpar}
+\inferrule[]{\isTp{A}_i}{\isTp{A}_{i + 1}}{}
+\quad
+\inferrule[]{\isTp{A \equiv B}_i}{\isTp{A \equiv B}_{i + 1}}{}
+\end{mathpar}
+\subsection*{Univalence axiom}
+Now that we have universes in our type theory, the two notions of equivalnace/equality $Id_A$ is isomorphic to $Eq_A$, as we can introduce a new notion $Path_{A}(M,N)$ i.e evidence that $M$ can be ``deformed" to $N$; $Path_M(A,B)$ is defined as $Eq(A,B)$!
+\\
+\\
+Now tht we hvae these paths, we want to reason with them as so:
+\begin{mathpar}
+\inferrule[]{M \, {p \over{}}\, N : A}{Path(p) : Path_A(M,N)}{}
+\end{mathpar}
+And these paths form "shapes" where we we can have path connecting between two paths.
+\newpage
+\section*{Adding computations}
+With the pure dependant type theory, we can extend it with computations by adding $\Gamma \vdash X \; \mathrm{Ctype}$, $\Gamma \vdash X \equiv Y$, $\Gamma \vdash C : X$, $\Gamma \vdash C \equiv C' : X$. With this new addition, we might want to study this new type theory, so it might be useful to review our methodology:
+\begin{enumerate}
+    \item Start with the operational semantics of the langauge, the transitions $M \xrightarrow{} M'$ and $M \; \mathrm{Val}$
+    \item Create a logic of programs that specifies behavior via logical relations
+    \item Validate the theory with theorems $\Gamma \vdash \isTp{A}$ and $\Gamma >> A \equiv A'$
+    \item Account for effects
+    \item Add phases similar to Kripke's logical relations
+\end{enumerate}
+A type system consists of
+\begin{enumerate}
+    \item A p.e.r with symmetry and transitivity such that $A = B$ is the exact equality of types.
+    \item For $\isTp{A}$ we have $M \doteq N \in A$ a p.e.r such that if $A \doteq B$ then $\_ \doteq \_ \in A = \_ \doteq \_ \in B$
+    \item Closed under head expansion so
+    \begin{itemize}
+        \item If $A' \xrightarrow{} A$ and $A \doteq B$ then $A' \doteq B$
+        \item If $M' \xrightarrow{} N$ and $M = N \in AA$ then $M' = N \in A$
+    \end{itemize}
+    \item Define $\Gamma \doteq \Gamma'$ and $\gamma \doteq \gamma'$
+    \item Define $\Gamma >> A \doteq B$ presupposing $\Gamma \doteq \Gamma'$ iff $\gamma \doteq \gamma' \in \Gamma$ implies $\hat{\gamma}A \doteq \hat{\gamma}B$
+    \item FTLR: if something was derivable then it is true which is the underlying mechanism behind the ``Canonical forms" lemma, for example:
+\end{enumerate}
+\end{document}
